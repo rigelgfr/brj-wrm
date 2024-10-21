@@ -11,6 +11,9 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        'green-krnd': '#7EAF45',
+        'lightgrey-krnd': '#848484',
+        'darkgrey-krnd': '#323033',
       },
     },
   },
