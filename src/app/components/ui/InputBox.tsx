@@ -19,7 +19,7 @@ export default function InputBox({
 }: InputBoxProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700">
+      <label htmlFor={id} className="block text-sm font-medium text-darkgrey-krnd">
         {label}
       </label>
       <input
