@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import OperationBarChart from '@/src/components/OperationBarChart'
+import FilterBar from '@/src/components/Slicer'
 
 export default function OperationsPage() {
   const [data, setData] = useState([])
@@ -34,12 +35,7 @@ export default function OperationsPage() {
       </div>
 
       <div className="container mx-auto">
-        <OperationBarChart 
-          data={data}
-          title="Truck In"
-          metricLabel="Truck Count"
-          formatValue={(value) => Math.round(value).toString()}
-        />
+        <FilterBar />
       </div>
 
     </div>

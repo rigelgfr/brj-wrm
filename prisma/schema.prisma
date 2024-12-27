@@ -78,11 +78,11 @@ model inbound {
   start_putaway    DateTime?   @db.Timestamp(6)
   finish_putaway   DateTime?   @db.Timestamp(6)
   user_putaway     String?     @db.VarChar(255)
-  id               String?     @default(dbgenerated("generate_in_id((plat_no)::text, inbound_date)"))
   year             Int?        @default(dbgenerated("EXTRACT(year FROM inbound_date)"))
   month            String?     @default(dbgenerated("get_month_name(inbound_date)"))
   week_no          String?     @default(dbgenerated("get_week_number(inbound_date)"))
   week_in_month    String?     @default(dbgenerated("get_week_in_month(inbound_date)"))
+  id               String?     @default(dbgenerated("generate_in_id((plat_no)::text, (container_no)::text, inbound_date)"))
   months           months?     @relation(fields: [month], references: [month_full], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_month")
   weeks            weeks?      @relation(fields: [week_in_month], references: [week], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_week")
   warehouses       warehouses? @relation(fields: [area], references: [wh_name], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_area")
@@ -199,4 +199,15 @@ model years {
   occupancy_sqm occupancy_sqm[]
   occupancy_vol occupancy_vol[]
   outbound      outbound[]
+}
+
+model inbound_aggregated {
+  warehouse          String
+  year               Int
+  month              String
+  week_in_month      String
+  unique_truck_count Int?
+  total_truck_count  Int?
+
+  @@id([warehouse, year, month, week_in_month])
 }
