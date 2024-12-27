@@ -45,6 +45,7 @@ export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-[url('/images/main-bg.png')] bg-cover bg-center">
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg overflow-hidden">
+        
         <div className="flex flex-col md:flex-row">
           {/* Left side - Image and Title */}
           <div className="relative w-full md:w-1/2 md:h-auto bg-[url('/images/login-card1.jpg')] bg-cover">
@@ -87,15 +88,18 @@ export default function LoginPage() {
                   Submit
                 </button>
               </div>
+              {/* Display the ErrorPopup when there is an error */}
+              {error && (
+                      <ErrorPopup message={error} onClose={() => setError('')} />
+                    )}
             </form>
 
-            {/* Display the ErrorPopup when there is an error */}
-            {error && (
-              <ErrorPopup message={error} onClose={() => setError('')} />
-            )}
+            
           </div>
         </div>
       </div>
+       
+      
     </div>
   );
 }

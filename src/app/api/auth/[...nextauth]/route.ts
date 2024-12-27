@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import { User } from "@prisma/client";
 import { compare } from "bcrypt";
 import NextAuth, { type NextAuthOptions } from "next-auth";
@@ -31,6 +31,9 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email
+          },
+          include: {
+            role: true // Include the role relation
           }
         })
 
@@ -48,7 +51,8 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.username,
-          roleId: user.roleId + ''
+          roleId: user.roleId + '',
+          roleName: user.role.name
         }
       }
     })
@@ -61,22 +65,45 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
-          role: token.role
+          roleId: token.roleId,
+          roleName: token.roleName
         }
       }
     },
     jwt: ({ token, user }) => {
       console.log('JWT Callback', {token, user})
       if (user) {
-        const u = user as unknown as User
+        const u = user as any;
         return {
           ...token,
           id: u.id,
-          role: u.roleId
+          roleId: u.roleId,
+          roleName: u.roleName
         }
       }
       return token
     }
+  }
+}
+
+// Add type declaration for next-auth
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      roleId: string;
+      roleName: string;
+    }
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    roleId: string;
+    roleName: string;
   }
 }
 

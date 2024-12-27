@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,21 +8,195 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  role      Role     @relation(fields: [roleId], references: [id])
-  roleId    Int      @map("role_id")
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String    @unique @db.VarChar(255)
+  username  String    @unique @db.VarChar(50)
+  password  String    @db.VarChar(255)
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  roleId    Int       @map("role_id")
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("users")
 }
 
 model Role {
   id    Int    @id @default(autoincrement())
-  name  String @unique
+  name  String @unique @db.VarChar(50)
   users User[]
 
   @@map("roles")
+}
+
+model warehouses {
+  wh_name       String          @id
+  wh_type       String?         @unique
+  space         Int?
+  max_cap_sqm   Int?
+  max_cap_vol   Int?
+  inbound       inbound[]
+  occupancy_sqm occupancy_sqm[]
+  occupancy_vol occupancy_vol[]
+  outbound      outbound[]
+}
+
+model inbound {
+  no               Int         @id
+  wh_name          String?
+  area             String?
+  inbound_date     DateTime?   @db.Date
+  gate_in          DateTime?   @db.Time(6)
+  inbound_doc_type String?     @db.VarChar(255)
+  inbound_doc      String?     @db.VarChar(255)
+  receiving_doc    String?     @db.VarChar(255)
+  customer_name    String?     @db.VarChar(255)
+  shipper_name     String?     @db.VarChar(255)
+  bl_do            String?     @db.VarChar(255)
+  aju_no           String?     @db.VarChar(255)
+  truck_type       String?     @db.VarChar(255)
+  plat_no          String?     @db.VarChar(255)
+  container_no     String?     @db.VarChar(255)
+  seal_no          String?     @db.VarChar(255)
+  item_code        String?     @db.VarChar(255)
+  item_name        String?     @db.VarChar(255)
+  qty              Int?
+  uom              String?     @db.VarChar(50)
+  nett_weight      Decimal?    @db.Decimal(15, 3)
+  gross_weight     Decimal?    @db.Decimal(15, 3)
+  volume           Decimal?    @db.Decimal(15, 3)
+  batch            String?
+  npe_no           String?     @db.VarChar(255)
+  npe_date         DateTime?   @db.Date
+  peb_no           String?     @db.VarChar(255)
+  peb_date         DateTime?   @db.Date
+  remark           String?     @db.VarChar(255)
+  dock_no          String?     @db.VarChar(255)
+  doc_status       String?     @db.VarChar(255)
+  user_admin       String?     @db.VarChar(255)
+  start_tally      DateTime?   @db.Timestamp(6)
+  finish_tally     DateTime?   @db.Timestamp(6)
+  user_tally       String?     @db.VarChar(255)
+  start_putaway    DateTime?   @db.Timestamp(6)
+  finish_putaway   DateTime?   @db.Timestamp(6)
+  user_putaway     String?     @db.VarChar(255)
+  id               String?     @default(dbgenerated("generate_in_id((plat_no)::text, inbound_date)"))
+  year             Int?        @default(dbgenerated("EXTRACT(year FROM inbound_date)"))
+  month            String?     @default(dbgenerated("get_month_name(inbound_date)"))
+  week_no          String?     @default(dbgenerated("get_week_number(inbound_date)"))
+  week_in_month    String?     @default(dbgenerated("get_week_in_month(inbound_date)"))
+  months           months?     @relation(fields: [month], references: [month_full], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_month")
+  weeks            weeks?      @relation(fields: [week_in_month], references: [week], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_week")
+  warehouses       warehouses? @relation(fields: [area], references: [wh_name], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_area")
+  years            years?      @relation(fields: [year], references: [year], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_year")
+}
+
+model months {
+  month         String          @id @db.VarChar(3)
+  month_full    String?         @unique
+  sort          Int?
+  inbound       inbound[]
+  occupancy_sqm occupancy_sqm[]
+  occupancy_vol occupancy_vol[]
+  outbound      outbound[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model occupancy_sqm {
+  id         Int        @id @default(autoincrement())
+  year       Int
+  month      String     @db.VarChar(3)
+  week       String     @db.VarChar(2)
+  wh_type    String
+  status     String
+  space      Int?
+  months     months     @relation(fields: [month], references: [month], onDelete: Cascade, onUpdate: NoAction, map: "fk_month")
+  weeks      weeks      @relation(fields: [week], references: [week], onDelete: Cascade, onUpdate: NoAction, map: "fk_week")
+  warehouses warehouses @relation(fields: [wh_type], references: [wh_type], onDelete: Cascade, onUpdate: NoAction, map: "fk_wh_type")
+  years      years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model occupancy_vol {
+  id         Int        @id @default(autoincrement())
+  year       Int
+  month      String     @db.VarChar(3)
+  week       String     @db.VarChar(2)
+  wh_type    String
+  status     String
+  space      Int?
+  months     months     @relation(fields: [month], references: [month], onDelete: Cascade, onUpdate: NoAction, map: "fk_month")
+  weeks      weeks      @relation(fields: [week], references: [week], onDelete: Cascade, onUpdate: NoAction, map: "fk_week")
+  warehouses warehouses @relation(fields: [wh_type], references: [wh_type], onDelete: Cascade, onUpdate: NoAction, map: "fk_wh_type")
+  years      years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
+}
+
+model outbound {
+  no                Int         @id
+  wh_name           String?
+  area              String?
+  outbound_date     DateTime?   @db.Date
+  outbound_time     DateTime?   @db.Time(6)
+  loading_date      DateTime?   @db.Date
+  outbound_doc_type String?     @db.VarChar(255)
+  outbound_doc      String?     @db.VarChar(255)
+  picking_doc       String?     @db.VarChar(255)
+  loading_doc       String?     @db.VarChar(255)
+  customer_name     String?     @db.VarChar(255)
+  shipper_name      String?     @db.VarChar(255)
+  item_code         String?     @db.VarChar(255)
+  item_name         String?     @db.VarChar(255)
+  doc_qty           Int?
+  qty               Int?
+  uom               String?     @db.VarChar(50)
+  nett_weight       Decimal?    @db.Decimal(15, 3)
+  gross_weight      Decimal?    @db.Decimal(15, 3)
+  volume            Decimal?    @db.Decimal(15, 3)
+  batch             String?
+  bl_do             String?     @db.VarChar(255)
+  aju_no            String?     @db.VarChar(255)
+  truck_type        String?     @db.VarChar(255)
+  truck_no          String?     @db.VarChar(255)
+  container_no      String?     @db.VarChar(255)
+  seal_no           String?     @db.VarChar(255)
+  vessel_name       String?     @db.VarChar(255)
+  voyage_no         String?     @db.VarChar(255)
+  destination       String?     @db.VarChar(255)
+  recipient         String?     @db.VarChar(255)
+  address           String?     @db.VarChar(255)
+  shipping_notes    String?     @db.VarChar(255)
+  remark            String?     @db.VarChar(255)
+  doc_status        String?     @db.VarChar(255)
+  user_admin        String?     @db.VarChar(255)
+  start_picking     DateTime?   @db.Timestamp(6)
+  finish_picking    DateTime?   @db.Timestamp(6)
+  user_picking      String?     @db.VarChar(255)
+  start_loading     DateTime?   @db.Timestamp(6)
+  finish_loading    DateTime?   @db.Timestamp(6)
+  user_loading      String?     @db.VarChar(255)
+  id                String?     @default(dbgenerated("generate_out_id((truck_no)::text, (container_no)::text, outbound_date)"))
+  year              Int?        @default(dbgenerated("EXTRACT(year FROM outbound_date)"))
+  month             String?     @default(dbgenerated("get_month_name(outbound_date)"))
+  week_no           String?     @default(dbgenerated("get_week_number(outbound_date)"))
+  week_in_month     String?     @default(dbgenerated("get_week_in_month(outbound_date)"))
+  months            months?     @relation(fields: [month], references: [month_full], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_month")
+  weeks             weeks?      @relation(fields: [week_in_month], references: [week], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_week")
+  warehouses        warehouses? @relation(fields: [area], references: [wh_name], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_area")
+  years             years?      @relation(fields: [year], references: [year], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_year")
+}
+
+model weeks {
+  week          String          @id @db.VarChar(2)
+  inbound       inbound[]
+  occupancy_sqm occupancy_sqm[]
+  occupancy_vol occupancy_vol[]
+  outbound      outbound[]
+}
+
+model years {
+  year          Int             @id
+  inbound       inbound[]
+  occupancy_sqm occupancy_sqm[]
+  occupancy_vol occupancy_vol[]
+  outbound      outbound[]
 }

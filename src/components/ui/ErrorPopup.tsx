@@ -6,7 +6,7 @@ interface ErrorPopupProps {
   onClose: () => void
 }
 
-const ErrorPopup: React.FC<ErrorPopupProps> = ({ message, duration = 3000, onClose }) => {
+const ErrorPopup: React.FC<ErrorPopupProps> = ({ message, duration = 2000, onClose }) => {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const ErrorPopup: React.FC<ErrorPopupProps> = ({ message, duration = 3000, onClo
 
   return (
     <div
-      className={`fixed bottom-10 right-0 transform transition-all duration-500 ease-in-out p-4 bg-red-500 text-white rounded-l-md shadow-lg
+      className={`fixed right-0 transform transition-all duration-300 ease-in-out p-4 bg-red-500 text-white rounded-l-md shadow-lg
         ${isVisible ? '-translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
     >
       {message}
