@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/src/components/ui/Button"
 import {
@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterState, FilterOption, SlicerType } from './types'
+import OperationBarChart from './OperationBarChart'
+import GroupedBarChart from './GroupedBarChart'
 
 const filterOptions: Record<SlicerType, FilterOption[]> = {
   year: [
@@ -43,6 +45,19 @@ const filterOptions: Record<SlicerType, FilterOption[]> = {
     { value: 'GB', label: 'BONDED' },
     { value: 'PLB', label: 'PLB' },
   ],
+}
+
+// Default filter values
+const defaultFilters: FilterState = {
+  year: ['2024'],
+  month: ['October'],
+  week: ['W1'],
+  warehouse: filterOptions.warehouse.map(w => w.value),
+}
+
+interface ChartData {
+  warehouse: string;
+  value: number;
 }
 
 const Slicer = ({ type, options, selected, onChange }: {
@@ -92,19 +107,39 @@ const Slicer = ({ type, options, selected, onChange }: {
 }
 
 export default function FilterBar() {
-  const [filters, setFilters] = useState<FilterState>({
-    year: [],
-    month: [],
-    week: [],
-    warehouse: [],
-  })
-  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
-    year: [],
-    month: [],
-    week: [],
-    warehouse: [],
-  })
+  const [filters, setFilters] = useState<FilterState>(defaultFilters)
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>(defaultFilters)
   const [isOpen, setIsOpen] = useState(false)
+  const [chartData, setChartData] = useState<ChartData[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const fetchData = async (filterState: FilterState) => {
+    setIsLoading(true)
+    try {
+      // Construct URL with search params
+      const params = new URLSearchParams()
+      
+      if (filterState.year.length) params.append('year', filterState.year[0])
+      if (filterState.month.length) params.append('month', filterState.month[0])
+      filterState.week.forEach(week => params.append('week', week))
+      filterState.warehouse.forEach(warehouse => params.append('warehouse', warehouse))
+
+      const response = await fetch(`/api/operation_in?${params.toString()}`)
+      if (!response.ok) throw new Error('Failed to fetch data')
+      
+      const data = await response.json()
+      setChartData(data)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch data on initial load and when filters are applied
+  useEffect(() => {
+    fetchData(appliedFilters)
+  }, [appliedFilters])
 
   const handleFilterChange = (type: SlicerType, value: string) => {
     setFilters((prev) => {
@@ -131,30 +166,42 @@ export default function FilterBar() {
   }
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          Filters {getSelectedCount(appliedFilters) > 0 && `(${getSelectedCount(appliedFilters)})`}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-screen max-w-3xl p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(Object.keys(filterOptions) as SlicerType[]).map((type) => (
-            <Slicer
-              key={type}
-              type={type}
-              options={filterOptions[type]}
-              selected={filters[type]}
-              onChange={handleFilterChange}
-            />
-          ))}
-        </div>
-        <div className="mt-4 flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmit}>Apply</Button>
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="space-y-4">
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline">
+            Filters {getSelectedCount(appliedFilters) > 0 && `(${getSelectedCount(appliedFilters)})`}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-screen max-w-3xl p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {(Object.keys(filterOptions) as SlicerType[]).map((type) => (
+              <Slicer
+                key={type}
+                type={type}
+                options={filterOptions[type]}
+                selected={filters[type]}
+                onChange={handleFilterChange}
+              />
+            ))}
+          </div>
+          <div className="mt-4 flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit}>Apply</Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {isLoading ? (
+        <div className="text-center">Loading...</div>
+      ) : (
+        <GroupedBarChart 
+          data={chartData}
+          weeks={appliedFilters.week}
+          title='Truck In'
+        />
+      )}
+    </div>
   )
 }
 
