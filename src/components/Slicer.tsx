@@ -42,8 +42,8 @@ const filterOptions: Record<SlicerType, FilterOption[]> = {
     { value: 'CFS', label: 'CFS' },
     { value: 'FREEZONE AB', label: 'FZ AB' },
     { value: 'FREEZONE BRJ', label: 'FZ BRJ' },
-    { value: 'GB', label: 'BONDED' },
     { value: 'PLB', label: 'PLB' },
+    { value: 'GB', label: 'BONDED(GB)' },
   ],
 }
 

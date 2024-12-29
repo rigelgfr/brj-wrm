@@ -20,11 +20,11 @@ const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[400px]">
+        <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+              margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -33,8 +33,7 @@ const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
               />
               <YAxis
                 className="text-sm"
-                label={{ 
-                  value: 'Total Truck Count', 
+                label={{  
                   angle: -90, 
                   position: 'insideLeft' 
                 }}
@@ -46,7 +45,7 @@ const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
                   key={week}
                   dataKey={week}
                   fill={COLORS[index % COLORS.length]}
-                  name={`Week ${week.slice(1)}`}
+                  name={`W${week.slice(1)}`}
                   radius={[4, 4, 0, 0]}
                 />
               ))}

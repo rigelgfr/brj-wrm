@@ -11,20 +11,7 @@ export async function GET(request: Request) {
 
   console.log('Query params:', { year, month, weeks, warehouses })
 
-  try {
-    const sampleData = await prisma.inbound_aggregated.findMany({
-        take: 5,
-        select: {
-          warehouse: true,
-          year: true,
-          month: true,
-          week_in_month: true,
-          unique_truck_count: true
-        }
-      })
-
-      console.log('Sample data from DB:', sampleData)
-    
+  try {    
     const data = await prisma.inbound_aggregated.findMany({
       where: {
         year: year,
@@ -42,9 +29,6 @@ export async function GET(request: Request) {
         unique_truck_count: true
       }
     })
-
-    console.log('Query result:', data)
-
 
     // Transform data to be grouped by warehouse
     const transformedData = warehouses.map(warehouse => {
