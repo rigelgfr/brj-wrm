@@ -1,4 +1,3 @@
-// app/api/inbound/route.ts
 import { prisma } from "@/src/lib/prisma"
 
 export async function GET(request: Request) {
@@ -13,7 +12,7 @@ export async function GET(request: Request) {
   console.log('Query params:', { year, month, weeks, warehouses })
 
   try {    
-    const data = await prisma.inbound_aggregate.findMany({
+    const data = await prisma.outbound_aggregate.findMany({
       where: {
         year: year,
         month: month,

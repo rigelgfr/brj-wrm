@@ -208,6 +208,31 @@ model inbound_aggregated {
   week_in_month      String
   unique_truck_count Int?
   total_truck_count  Int?
+  total_volume       Decimal? @db.Decimal
+
+  @@id([warehouse, year, month, week_in_month])
+}
+
+model inbound_aggregate {
+  warehouse          String
+  year               Int
+  month              String
+  week_in_month      String
+  total_volume       Decimal? @db.Decimal
+  unique_truck_count Int?
+  total_truck_count  Int?
+
+  @@id([warehouse, year, month, week_in_month])
+}
+
+model outbound_aggregate {
+  warehouse          String
+  year               Int
+  month              String
+  week_in_month      String
+  total_volume       Decimal? @db.Decimal
+  unique_truck_count Int?
+  total_truck_count  Int?
 
   @@id([warehouse, year, month, week_in_month])
 }

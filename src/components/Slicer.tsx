@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FilterState, FilterOption, SlicerType } from './types'
-import OperationBarChart from './OperationBarChart'
 import GroupedBarChart from './GroupedBarChart'
 
 const filterOptions: Record<SlicerType, FilterOption[]> = {
@@ -110,8 +109,11 @@ export default function FilterBar() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters)
   const [appliedFilters, setAppliedFilters] = useState<FilterState>(defaultFilters)
   const [isOpen, setIsOpen] = useState(false)
-  const [chartData, setChartData] = useState<ChartData[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [operationData, setOperationData] = useState({
+    inbound: { truck: { data: [] }, volume: { data: [] } },
+    outbound: { truck: { data: [] }, volume: { data: [] } }
+  })
 
   const fetchData = async (filterState: FilterState) => {
     setIsLoading(true)
@@ -124,13 +126,31 @@ export default function FilterBar() {
       filterState.week.forEach(week => params.append('week', week))
       filterState.warehouse.forEach(warehouse => params.append('warehouse', warehouse))
 
-      const response = await fetch(`/api/operation_in?${params.toString()}`)
-      if (!response.ok) throw new Error('Failed to fetch data')
+      const [inboundRes, outboundRes] = await Promise.all([
+        fetch(`/api/operation_in?${params.toString()}`),
+        fetch(`/api/operation_out?${params.toString()}`)
+      ])
       
-      const data = await response.json()
-      setChartData(data)
+      if (!inboundRes.ok || !outboundRes.ok) {
+        throw new Error('Failed to fetch operation data')
+      }
+
+      const [inboundData, outboundData] = await Promise.all([
+        inboundRes.json(),
+        outboundRes.json()
+      ])
+
+      setOperationData({
+        inbound: inboundData,
+        outbound: outboundData
+      })
+      
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching operation data:', error)
+      setOperationData({
+        inbound: { truck: { data: [] }, volume: { data: [] } },
+        outbound: { truck: { data: [] }, volume: { data: [] } }
+      })
     } finally {
       setIsLoading(false)
     }
@@ -195,11 +215,35 @@ export default function FilterBar() {
       {isLoading ? (
         <div className="text-center">Loading...</div>
       ) : (
-        <GroupedBarChart 
-          data={chartData}
-          weeks={appliedFilters.week}
-          title='Truck In'
-        />
+        <div className="space-y-8">
+          {/* Inbound Operations */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <GroupedBarChart
+              data={operationData.inbound.truck.data}
+              weeks={appliedFilters.week}
+              title="Truck In"
+            />
+            <GroupedBarChart
+              data={operationData.inbound.volume.data}
+              weeks={appliedFilters.week}
+              title="Volume In"
+            />
+          </div>
+
+          {/* Outbound Operations */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <GroupedBarChart
+              data={operationData.outbound.truck.data}
+              weeks={appliedFilters.week}
+              title="Truck Out"
+            />
+            <GroupedBarChart
+              data={operationData.outbound.volume.data}
+              weeks={appliedFilters.week}
+              title="Volume Out"
+            />
+          </div>
+        </div>
       )}
     </div>
   )
