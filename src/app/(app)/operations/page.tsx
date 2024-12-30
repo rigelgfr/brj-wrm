@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import FilterBar from '@/src/components/Slicer'
+import OperationsData from './data'
 
 export default function OperationsPage() {
   return (
@@ -11,7 +11,7 @@ export default function OperationsPage() {
       </div>
 
       <div className="container mx-auto">
-        <FilterBar />
+        <OperationsData />
       </div>
 
     </div>
