@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { FilterState, FilterOption, SlicerType } from './types'
 import GroupedBarChart from './GroupedBarChart'
+import Loading from './ui/Loading'
 
 const filterOptions: Record<SlicerType, FilterOption[]> = {
   year: [
@@ -39,10 +40,10 @@ const filterOptions: Record<SlicerType, FilterOption[]> = {
   ],
   warehouse: [
     { value: 'CFS', label: 'CFS' },
-    { value: 'FREEZONE AB', label: 'FZ AB' },
-    { value: 'FREEZONE BRJ', label: 'FZ BRJ' },
+    { value: 'FZ AB', label: 'FZ AB' },
+    { value: 'FZ BRJ', label: 'FZ BRJ' },
     { value: 'PLB', label: 'PLB' },
-    { value: 'GB', label: 'BONDED(GB)' },
+    { value: 'Bonded', label: 'BONDED' },
   ],
 }
 
@@ -54,10 +55,14 @@ const defaultFilters: FilterState = {
   warehouse: filterOptions.warehouse.map(w => w.value),
 }
 
-interface ChartData {
-  warehouse: string;
-  value: number;
-}
+// Helper function to sort weeks
+const sortWeeks = (weeks: string[]) => {
+  return [...weeks].sort((a, b) => {
+    const weekA = parseInt(a.slice(1));
+    const weekB = parseInt(b.slice(1));
+    return weekA - weekB;
+  });
+};
 
 const Slicer = ({ type, options, selected, onChange }: {
   type: SlicerType;
@@ -123,7 +128,10 @@ export default function FilterBar() {
       
       if (filterState.year.length) params.append('year', filterState.year[0])
       if (filterState.month.length) params.append('month', filterState.month[0])
-      filterState.week.forEach(week => params.append('week', week))
+      
+      const sortedWeeks = sortWeeks(filterState.week)
+      sortedWeeks.forEach(week => params.append('week', week))
+
       filterState.warehouse.forEach(warehouse => params.append('warehouse', warehouse))
 
       const [inboundRes, outboundRes] = await Promise.all([
@@ -161,20 +169,28 @@ export default function FilterBar() {
     fetchData(appliedFilters)
   }, [appliedFilters])
 
-  const handleFilterChange = (type: SlicerType, value: string) => {
+  const handleFilterChange = (type: SlicerType, value: string, sortValues: boolean = false) => {
     setFilters((prev) => {
+      let updatedFilters: string[];
+      
       if (value === 'all') {
-        return { ...prev, [type]: filterOptions[type].map(o => o.value) }
+        updatedFilters = filterOptions[type].map(o => o.value);
+      } else if (value === 'none') {
+        updatedFilters = [];
+      } else {
+        updatedFilters = prev[type].includes(value)
+          ? prev[type].filter((v) => v !== value)
+          : [...prev[type], value];
       }
-      if (value === 'none') {
-        return { ...prev, [type]: [] }
+
+      // Sort weeks if needed
+      if (sortValues) {
+        updatedFilters = sortWeeks(updatedFilters);
       }
-      const updatedFilters = prev[type].includes(value)
-        ? prev[type].filter((v) => v !== value)
-        : [...prev[type], value]
-      return { ...prev, [type]: updatedFilters }
-    })
-  }
+
+      return { ...prev, [type]: updatedFilters };
+    });
+  };
 
   const getSelectedCount = (filterState: FilterState) => {
     return Object.values(filterState).reduce((acc, curr) => acc + curr.length, 0)
@@ -213,7 +229,7 @@ export default function FilterBar() {
       </DropdownMenu>
 
       {isLoading ? (
-        <div className="text-center">Loading...</div>
+        <Loading />
       ) : (
         <div className="space-y-8">
           {/* Inbound Operations */}

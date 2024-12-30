@@ -1,7 +1,7 @@
 // components/GroupedBarChart.tsx
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, LabelList, CartesianGrid, Tooltip, ResponsiveContainer, Legend, YAxis } from 'recharts';
 
 interface GroupedBarChartProps {
   data: any[];
@@ -9,22 +9,45 @@ interface GroupedBarChartProps {
   title: string;
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#a4de6c'];
+const COLORS = ['#94d454', '#54cccc', '#fcc404', '#acd48c', '#e3cb8c'];
+
+// Helper function to sort weeks
+const sortWeeks = (weeks: string[]) => {
+  return [...weeks].sort((a, b) => {
+    const weekA = parseInt(a.slice(1));
+    const weekB = parseInt(b.slice(1));
+    return weekA - weekB;
+  });
+};
+
+// Helper function to sort warehouses alphabetically
+const sortWarehouses = (data: any[]) => {
+  return [...data].sort((a, b) => a.warehouse.localeCompare(b.warehouse));
+};
+
+// Helper function to calculate max value
+const calculateMaxValue = (data: any[], weeks: string[]) => {
+  const maxValue = Math.max(...data.flatMap(entry => weeks.map(week => entry[week] || 0)));
+  return maxValue * 1.1; // Add 10% padding;
+}
 
 const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
-    console.log('Chart Data:', data);
-  console.log('Weeks:', weeks);
+  const sortedWeeks = sortWeeks(weeks);
+  const sortedData = sortWarehouses(data);
+  const maxValuePadded = calculateMaxValue(data, weeks);
+
   return (
-    <Card>
+    <Card className='bg-slate-50'>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className='text-darkgrey-krnd'>{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data}
-              margin={{ top: 0, right: 30, left: 10, bottom: 0 }}
+              data={sortedData}
+              margin={{ top: 0, right: 10, left: 10, bottom: 0 }}
+              barCategoryGap={"10%"}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -32,22 +55,26 @@ const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
                 className="text-sm"
               />
               <YAxis
-                className="text-sm"
-                label={{  
-                  angle: -90, 
-                  position: 'insideLeft' 
-                }}
+                domain={[0, maxValuePadded]} // Set Y-axis range explicitly
+                hide // Hide the Y-axis visually
               />
               <Tooltip />
               <Legend />
-              {weeks.map((week, index) => (
+              {sortedWeeks.map((week, index) => (
                 <Bar 
                   key={week}
                   dataKey={week}
                   fill={COLORS[index % COLORS.length]}
                   name={`W${week.slice(1)}`}
                   radius={[4, 4, 0, 0]}
-                />
+                  maxBarSize={30}
+                >
+                  <LabelList 
+                    dataKey={week} 
+                    position="top" 
+                    className="text-xs"
+                  />
+                </Bar>
               ))}
             </BarChart>
           </ResponsiveContainer>

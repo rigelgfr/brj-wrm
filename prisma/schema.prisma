@@ -81,10 +81,9 @@ model inbound {
   year             Int?        @default(dbgenerated("EXTRACT(year FROM inbound_date)"))
   month            String?     @default(dbgenerated("get_month_name(inbound_date)"))
   week_no          String?     @default(dbgenerated("get_week_number(inbound_date)"))
-  week_in_month    String?     @default(dbgenerated("get_week_in_month(inbound_date)"))
   id               String?     @default(dbgenerated("generate_in_id((plat_no)::text, (container_no)::text, inbound_date)"))
+  week_in_month    String?     @default(dbgenerated("get_week_in_month(inbound_date)"))
   months           months?     @relation(fields: [month], references: [month_full], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_month")
-  weeks            weeks?      @relation(fields: [week_in_month], references: [week], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_week")
   warehouses       warehouses? @relation(fields: [area], references: [wh_name], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_area")
   years            years?      @relation(fields: [year], references: [year], onDelete: NoAction, onUpdate: NoAction, map: "fk_inbound_year")
 }
@@ -180,17 +179,14 @@ model outbound {
   week_no           String?     @default(dbgenerated("get_week_number(outbound_date)"))
   week_in_month     String?     @default(dbgenerated("get_week_in_month(outbound_date)"))
   months            months?     @relation(fields: [month], references: [month_full], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_month")
-  weeks             weeks?      @relation(fields: [week_in_month], references: [week], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_week")
   warehouses        warehouses? @relation(fields: [area], references: [wh_name], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_area")
   years             years?      @relation(fields: [year], references: [year], onDelete: NoAction, onUpdate: NoAction, map: "fk_outbound_year")
 }
 
 model weeks {
   week          String          @id @db.VarChar(2)
-  inbound       inbound[]
   occupancy_sqm occupancy_sqm[]
   occupancy_vol occupancy_vol[]
-  outbound      outbound[]
 }
 
 model years {
@@ -206,14 +202,15 @@ model inbound_aggregated {
   year               Int
   month              String
   week_in_month      String
+  total_volume       Decimal? @db.Decimal
   unique_truck_count Int?
   total_truck_count  Int?
-  total_volume       Decimal? @db.Decimal
+  total_volume_int   Int?     @default(dbgenerated("(total_volume)::integer"))
 
   @@id([warehouse, year, month, week_in_month])
 }
 
-model inbound_aggregate {
+model outbound_aggregated {
   warehouse          String
   year               Int
   month              String
@@ -221,18 +218,7 @@ model inbound_aggregate {
   total_volume       Decimal? @db.Decimal
   unique_truck_count Int?
   total_truck_count  Int?
-
-  @@id([warehouse, year, month, week_in_month])
-}
-
-model outbound_aggregate {
-  warehouse          String
-  year               Int
-  month              String
-  week_in_month      String
-  total_volume       Decimal? @db.Decimal
-  unique_truck_count Int?
-  total_truck_count  Int?
+  total_volume_int   Int?     @default(dbgenerated("(total_volume)::integer"))
 
   @@id([warehouse, year, month, week_in_month])
 }

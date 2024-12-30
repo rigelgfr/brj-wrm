@@ -49,8 +49,8 @@ export default function Header({
   return (
     <>
       <header className="bg-[url('/images/main-bg.png')] bg-cover bg-center drop-shadow-sm">
-        <div className="mx-[2em] h-12 flex items-center justify-between text-darkgrey-krnd">
-          <div className="text-2xl font-bold text-primary">
+        <div className="mx-[2em] h-12 flex items-center justify-between">
+          <div className="text-2xl font-bold text-primary text-white">
             {appName}
           </div>
           
