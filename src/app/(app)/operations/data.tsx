@@ -1,3 +1,4 @@
+// /app/operations/data.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -18,6 +19,7 @@ export interface OperationData {
 
 export default function OperationsData() {
   const [isLoading, setIsLoading] = useState(false)
+  const [filters, setFilters] = useState<FilterState>(defaultFilters); // Correctly initialize filters state
   const [operationData, setOperationData] = useState<OperationData>({
     inbound: { truck: { data: [] }, volume: { data: [] } },
     outbound: { truck: { data: [] }, volume: { data: [] } }
@@ -64,6 +66,7 @@ export default function OperationsData() {
   }
 
   const handleFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters)
     fetchOperationData(newFilters)
   }
 
@@ -84,12 +87,12 @@ export default function OperationsData() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <GroupedBarChart
               data={operationData.inbound.truck.data}
-              weeks={defaultFilters.week}
+              weeks={filters.week}
               title="Truck In"
             />
             <GroupedBarChart
               data={operationData.inbound.volume.data}
-              weeks={defaultFilters.week}
+              weeks={filters.week}
               title="Volume In"
             />
           </div>
@@ -98,12 +101,12 @@ export default function OperationsData() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <GroupedBarChart
               data={operationData.outbound.truck.data}
-              weeks={defaultFilters.week}
+              weeks={filters.week}
               title="Truck Out"
             />
             <GroupedBarChart
               data={operationData.outbound.volume.data}
-              weeks={defaultFilters.week}
+              weeks={filters.week}
               title="Volume Out"
             />
           </div>

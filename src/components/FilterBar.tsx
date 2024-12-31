@@ -103,21 +103,33 @@ const Slicer = ({ type, options, selected, onChange }: {
   )
 }
 
-interface FilterBarProps {
+export interface FilterBarProps {
   onFiltersChange: (filters: FilterState) => void;
   initialFilters?: FilterState;
+  monthFormat?: 'full' | 'short';
 }
 
-export default function FilterBar({ onFiltersChange, initialFilters = defaultFilters }: FilterBarProps) {
+export default function FilterBar({ 
+  onFiltersChange, 
+  initialFilters = defaultFilters,
+  monthFormat = 'full' 
+}: FilterBarProps) {
   const [filters, setFilters] = useState<FilterState>(initialFilters)
   const [isOpen, setIsOpen] = useState(false)
+
+  // Dynamically adjust month options based on monthFormat
+  const getMonthOptions = () => {
+    return monthFormat === 'short'
+      ? filterOptions.month.map(({ value, label }) => ({ value, label }))
+      : filterOptions.month.map(({ value }) => ({ value, label: value }));
+  };
 
   const handleFilterChange = (type: SlicerType, value: string) => {
     setFilters((prev) => {
       let updatedFilters: string[];
       
       if (value === 'all') {
-        updatedFilters = filterOptions[type].map(o => o.value);
+        updatedFilters = (type === 'month' ? getMonthOptions() : filterOptions[type]).map(o => o.value);
       } else if (value === 'none') {
         updatedFilters = [];
       } else {
