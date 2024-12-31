@@ -1,7 +1,7 @@
 // components/FilterBar/FilterBar.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/src/components/ui/Button"
 import {
@@ -9,6 +9,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+const FILTER_STORAGE_KEY = 'lastUsedFilter'
 
 export type SlicerType = 'year' | 'month' | 'week' | 'warehouse'
 export type FilterOption = { value: string; label: string }
@@ -55,6 +57,24 @@ export const defaultFilters: FilterState = {
   month: ['October'],
   week: ['W1'],
   warehouse: filterOptions.warehouse.map(w => w.value),
+}
+
+export function getStoredFilters(): FilterState {
+  if (typeof window === 'undefined') return defaultFilters
+  
+  const stored = localStorage.getItem(FILTER_STORAGE_KEY)
+  if (!stored) return defaultFilters
+
+  try {
+    return JSON.parse(stored)
+  } catch (error) {
+    console.error('Error parsing stored filters:', error)
+    return defaultFilters
+  }
+}
+
+export function storeFilters(filters: FilterState) {
+  localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters))
 }
 
 const Slicer = ({ type, options, selected, onChange }: {
@@ -116,6 +136,10 @@ export default function FilterBar({
 }: FilterBarProps) {
   const [filters, setFilters] = useState<FilterState>(initialFilters)
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    setFilters(initialFilters);
+  }, [initialFilters]);
 
   // Dynamically adjust month options based on monthFormat
   const getMonthOptions = () => {
@@ -189,9 +213,11 @@ export default function FilterBar({
         {/* Render selected values beside the filter component */}
         <div className="flex flex-wrap items-center gap-2">
             {['year', 'month', 'week'].map((type) => (
-              filters[type as SlicerType].length > 0 && (
+              initialFilters[type as SlicerType].length > 0 && (
                 <div key={type} className="text-sm">
-                  <strong>{type.charAt(0).toUpperCase() + type.slice(1)}:</strong> {formatSelectedValues(type as SlicerType)}
+                  <strong>{type.charAt(0).toUpperCase() + type.slice(1)}:</strong> {initialFilters[type as SlicerType]
+                    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+                    .join(', ')}
                 </div>
               )
             ))}

@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import FilterBar, { FilterState, defaultFilters } from '@/src/components/FilterBar'
+import FilterBar, { FilterState, defaultFilters, getStoredFilters, storeFilters } from '@/src/components/FilterBar'
 import { PieChart } from '@/src/components/PieChart'
 import Loading from '@/src/components/ui/Loading'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,6 +25,15 @@ export function OccupancySqmData() {
   const [occupancyData, setOccupancyData] = useState<OccupancySqmData>({})
   const [spaceData, setSpaceData] = useState<SpaceSqmData[]>([])
   const [isLoadingSpace, setIsLoadingSpace] = useState(false)
+  const [filters, setFilters] = useState<FilterState>(() => getStoredFilters()); // Correctly initialize filters state
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setFilters(getStoredFilters());
+    fetchOccupancyData(filters);
+    fetchSpaceData();
+    setIsHydrated(true);
+  }, []);
 
   const fetchOccupancyData = async (filters: FilterState) => {
     setIsLoading(true)
@@ -72,18 +81,18 @@ export function OccupancySqmData() {
   }
 
   const handleFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters)
+    storeFilters(newFilters)
     fetchOccupancyData(newFilters)
   }
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchOccupancyData(defaultFilters)
-    fetchSpaceData()
-  }, [])
+  if (!isHydrated) return null;
+
+  const warehouseOrder = ['CFS', 'FZ BRJ', 'FZ AB', 'Bonded', 'PLB'];
 
   return (
     <div className="space-y-2">
-      <FilterBar onFiltersChange={handleFiltersChange} monthFormat='short' />
+      <FilterBar onFiltersChange={handleFiltersChange} monthFormat='short' initialFilters={filters}/>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Space Data Table - separate loading state */}
@@ -125,7 +134,9 @@ export function OccupancySqmData() {
             </div>
           ))
         ) : (
-          Object.entries(occupancyData).map(([warehouse, data]) => (
+          Object.entries(occupancyData)
+          .sort((a, b) => warehouseOrder.indexOf(a[0]) - warehouseOrder.indexOf(b[0]))
+          .map(([warehouse, data]) => (
             <PieChart
               key={warehouse}
               data={data}

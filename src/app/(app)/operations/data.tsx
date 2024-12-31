@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import FilterBar, { FilterState, defaultFilters } from '@/src/components/FilterBar'
+import FilterBar, { FilterState, defaultFilters, getStoredFilters, storeFilters } from '@/src/components/FilterBar'
 import GroupedBarChart from '@/src/components/GroupedBarChart'
 import Loading from '@/src/components/ui/Loading'
 
@@ -18,12 +18,20 @@ export interface OperationData {
 }
 
 export default function OperationsData() {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(false)
-  const [filters, setFilters] = useState<FilterState>(defaultFilters); // Correctly initialize filters state
+  const [filters, setFilters] = useState<FilterState>(() => getStoredFilters()); // Correctly initialize filters state
   const [operationData, setOperationData] = useState<OperationData>({
     inbound: { truck: { data: [] }, volume: { data: [] } },
     outbound: { truck: { data: [] }, volume: { data: [] } }
   })
+
+  // Fetch initial data
+  useEffect(() => {
+    setFilters(getStoredFilters())  
+    fetchOperationData(filters)
+    setIsHydrated(true)
+  }, [])
 
   const fetchOperationData = async (filters: FilterState) => {
     setIsLoading(true)
@@ -67,17 +75,16 @@ export default function OperationsData() {
 
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters)
+    storeFilters(newFilters) // Store new filters when they change
     fetchOperationData(newFilters)
   }
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchOperationData(defaultFilters)
-  }, [])
+  if (!isHydrated) return null; // Avoid rendering until hydration
+
 
   return (
     <div className="space-y-4">
-      <FilterBar onFiltersChange={handleFiltersChange} />
+      <FilterBar onFiltersChange={handleFiltersChange} initialFilters={filters} />
       
       {isLoading ? (
         <Loading />
