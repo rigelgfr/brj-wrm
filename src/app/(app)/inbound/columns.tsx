@@ -1,7 +1,8 @@
 "use client";
+import { useState } from "react";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, StickyNote } from "lucide-react";
 import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/src/components/ui/Button";
@@ -10,16 +11,16 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import EditDialog from "@/src/components/EditDialog";
 
-// Define the shape of the outbound data
+// Define the shape of the inbound data
 export type Inbound = {
   no: number;
   area: string | null;
   inbound_date: Date | null;  // We’ll handle this as a string for formatting
-  gate_in: string | null;
+  gate_in: Date | null;
   inbound_doc_type: string | null;
   inbound_doc: string | null;
   receiving_doc: string | null;
@@ -253,48 +254,64 @@ export const columns: ColumnDef<Inbound>[] = [
       header: "Start Tally",
       cell: ({ row }) => {
         const timeValue = row.getValue("start_tally"); // Expected to be a Date object or null
-      
+    
         if (!timeValue) {
           // Handle null or undefined values
           return <div>-</div>;
         }
-      
+    
         try {
           // Ensure the value is a Date object
           const dateObject = new Date(timeValue);
-      
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+    
+          // Format as yyyy-mm-dd hh:mm:ss
+          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+          return <div className="text-right">{formattedDateTime}</div>;
         } catch {
           // Handle invalid Date cases
-          return <div>Invalid Time</div>;
+          return <div>Invalid Date/Time</div>;
         }
       },
-    },
+    },    
     {
       accessorKey: "finish_tally",
       header: "Finish Tally",
       cell: ({ row }) => {
         const timeValue = row.getValue("finish_tally"); // Expected to be a Date object or null
-      
+    
         if (!timeValue) {
           // Handle null or undefined values
           return <div>-</div>;
         }
-      
+    
         try {
           // Ensure the value is a Date object
           const dateObject = new Date(timeValue);
-      
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+    
+          // Format as yyyy-mm-dd hh:mm:ss
+          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+          return <div className="text-right">{formattedDateTime}</div>;
         } catch {
           // Handle invalid Date cases
-          return <div>Invalid Time</div>;
+          return <div>Invalid Date/Time</div>;
         }
       },
     },
@@ -307,23 +324,31 @@ export const columns: ColumnDef<Inbound>[] = [
       header: "Start Putaway",
       cell: ({ row }) => {
         const timeValue = row.getValue("start_putaway"); // Expected to be a Date object or null
-      
+    
         if (!timeValue) {
           // Handle null or undefined values
           return <div>-</div>;
         }
-      
+    
         try {
           // Ensure the value is a Date object
           const dateObject = new Date(timeValue);
-      
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+    
+          // Format as yyyy-mm-dd hh:mm:ss
+          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+          return <div className="text-right">{formattedDateTime}</div>;
         } catch {
           // Handle invalid Date cases
-          return <div>Invalid Time</div>;
+          return <div>Invalid Date/Time</div>;
         }
       },
     },
@@ -332,23 +357,31 @@ export const columns: ColumnDef<Inbound>[] = [
       header: "Finish Putaway",
       cell: ({ row }) => {
         const timeValue = row.getValue("finish_putaway"); // Expected to be a Date object or null
-      
+    
         if (!timeValue) {
           // Handle null or undefined values
           return <div>-</div>;
         }
-      
+    
         try {
           // Ensure the value is a Date object
           const dateObject = new Date(timeValue);
-      
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+    
+          // Format as yyyy-mm-dd hh:mm:ss
+          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+          return <div className="text-right">{formattedDateTime}</div>;
         } catch {
           // Handle invalid Date cases
-          return <div>Invalid Time</div>;
+          return <div>Invalid Date/Time</div>;
         }
       },
     },
@@ -381,30 +414,94 @@ export const columns: ColumnDef<Inbound>[] = [
     },
     {
       id: "actions",
+      header: () => (
+        <div className="flex items-center">
+          <StickyNote className="h-5 w-5 mx-auto" /> {/* The icon with styling */}
+        </div>
+      ),
       cell: ({ row }) => {
-        const payment = row.original
-   
+        const [showEditDialog, setShowEditDialog] = useState(false);
+        
+        // Specify which columns should be editable
+        const editableColumns = [
+          "area",
+          "inbound_date",
+          "gate_in",
+          "inbound_doc_type",
+          "inbound_doc",
+          "receiving_doc",
+          "customer_name",
+          "shipper_name",
+          "item_code",
+          "item_name",
+          "qty",
+          "uom",
+          "nett_weight",
+          "gross_weight",
+          "volume",
+          "batch",
+          "npe_no",
+          "npe_date",
+          "peb_no",
+          "peb_date",
+          "bl_do",
+          "aju_no",
+          "truck_type",
+          "plat_no",
+          "container_no",
+          "remark",
+          "dock_no",
+          "doc_status",
+          "user_admin",
+          "start_tally",
+          "finish_tally",
+          "user_tally",
+          "start_putaway",
+          "finish_putaway",
+          "user_loading",
+        ];
+    
+        const handleSave = async (updatedData: Partial<Inbound>) => {
+          try {
+            // Add your update API call here
+            console.log('Updating record:', row.original.id, updatedData);
+            // await updateRecord(row.original.id, updatedData);
+          } catch (error) {
+            console.error('Failed to update:', error);
+            throw error;
+          }
+        };
+    
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.id)}
-              >
-                Copy payment ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>View customer</DropdownMenuItem>
-              <DropdownMenuItem>View payment details</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
+          <div className="">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600 hover:bg-gray-200">
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+    
+            <EditDialog
+              row={row.original}
+              columns={columns}
+              editableColumns={editableColumns}
+              isOpen={showEditDialog}
+              onClose={() => setShowEditDialog(false)}
+              onSave={handleSave}
+            />
+          </div>
+        );
       },
-    },
+    }
   ];

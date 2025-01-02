@@ -24,6 +24,7 @@ import {
 
 import { Button } from "./ui/Button"
 import { Input } from "@/components/ui/input"
+import { Plus } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -93,15 +94,22 @@ export function DataTable<TData, TValue>({
             onChange={(event) =>
               table.getColumn("item_name")?.setFilterValue(event.target.value)
             }
-            className="w-1/6"
+            className="w-1/6 mr-2"
           />
           <Button
             onClick={resetFiltersAndSorting}
             variant="outline"
-            size="sm"
-            className="ml-auto bg-green-krnd text-white"
+            size="default"
+            className="text-darkgrey-krnd"
           >
             Reset
+          </Button>
+          <Button
+            variant="default"
+            size="default"
+            className="bg-green-krnd ml-auto"
+          >
+            Add data
           </Button>
       </div>
        
@@ -111,9 +119,17 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
+                  const isActions = header.id === "actions";
                   return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
+                    <TableHead 
+                        key={header.id}
+                        className={`${
+                          isActions 
+                            ? "sticky right-0 bg-white drop-shadow-lg" 
+                            : ""
+                        }`}
+                      >
+                        {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
@@ -132,11 +148,21 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const isActions = cell.column.id === "actions";
+                    return (
+                      <TableCell 
+                        key={cell.id}
+                        className={`${
+                          isActions 
+                            ? "sticky right-0 bg-white drop-shadow-lg" 
+                            : ""
+                        }`}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    )
+                  })}
                 </TableRow>
               ))
             ) : (

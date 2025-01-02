@@ -138,7 +138,7 @@ export function OccupancyVolData() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Space Data Table */}
         <Card className="w-full border-none shadow-none">
-          <CardContent className='px-0'>
+          <CardContent className='px-0 pb-0'>
             {isLoadingSpace ? (
               <Loading />
             ) : (
@@ -186,16 +186,22 @@ export function OccupancyVolData() {
             </div>
           ))
         ) : (
-        Object.entries(allWeeksData)
-        .sort(([a], [b]) => warehouseOrder.indexOf(a) - warehouseOrder.indexOf(b))
-        .map(([warehouse, data]) => (
-            <SingleBarChart
-                key={warehouse}
-                data={data}
-                title={warehouse}
-                selectedWeeks={selectedWeek} // Pass array of selected weeks
-            />
-          ))
+          Object.entries(allWeeksData)
+            .sort(([a], [b]) => warehouseOrder.indexOf(a) - warehouseOrder.indexOf(b))
+            .map(([warehouse, data]) => {
+              // Find the corresponding warehouse data
+              const warehouseSpace = spaceData.find(space => space.wh_type === warehouse);
+              
+              return (
+                <SingleBarChart
+                  key={warehouse}
+                  data={data}
+                  title={warehouse}
+                  selectedWeeks={filters.week}
+                  maxCapacity={warehouseSpace?.max_cap_vol ?? undefined}
+                />
+              );
+            })
         )}
       </div>
     </div>

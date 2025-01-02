@@ -8,18 +8,24 @@ interface SingleBarChartProps {
     occupied: number;
   }>;
   title: string;
-  selectedWeek: string;
+  selectedWeeks: string[];
+  maxCapacity?: number; // Added maxCapacity prop
 }
 
-const SingleBarChart = ({ data, title, selectedWeek }: SingleBarChartProps) => {
+const SingleBarChart = ({ data, title, selectedWeeks, maxCapacity }: SingleBarChartProps) => {
   const maxValue = Math.max(...data.map(d => d.occupied));
 
   return (
     <Card className='bg-slate-50'>
-      <CardHeader>
+      <div className="flex justify-between items-center p-6 pb-0">
         <CardTitle className='text-darkgrey-krnd'>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
+        {maxCapacity !== undefined && (
+          <div className="text-sm text-gray-600">
+            Max. Capacity: {maxCapacity.toLocaleString()} m³
+          </div>
+        )}
+      </div>
+      <CardContent className='pt-0 px-0'>
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -46,7 +52,7 @@ const SingleBarChart = ({ data, title, selectedWeek }: SingleBarChartProps) => {
                 {data.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`}
-                    fill={entry.week === selectedWeek ? '#94d454' : '#636363'}
+                    fill={selectedWeeks.includes(entry.week) ? '#94d454' : '#c5e7a7'}
                   />
                 ))}
                 <LabelList 
@@ -54,7 +60,7 @@ const SingleBarChart = ({ data, title, selectedWeek }: SingleBarChartProps) => {
                   position="top" 
                   className="text-xs"
                   formatter={(value: number) => value.toLocaleString()}
-                  style={{ fill: '#000' }}
+                  style={{ fill: '#4b5563' }}
                 />
               </Bar>
             </BarChart>

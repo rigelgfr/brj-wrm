@@ -1,3 +1,4 @@
+// FOR LOGIN PAGE ONLY
 'use client'
 
 interface InputBoxProps {
