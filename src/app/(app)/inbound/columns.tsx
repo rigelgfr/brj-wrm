@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import EditDialog from "@/src/components/EditDialog";
+import ConfirmDialog from "@/src/components/ui/ConfirmDialog";
 
 // Define the shape of the inbound data
 export type Inbound = {
@@ -64,7 +65,19 @@ export type Inbound = {
 export const columns: ColumnDef<Inbound>[] = [
     {
       accessorKey: "no",
-      header: "No",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-2"
+          >
+            No
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => <div className="text-center">{row.getValue("no")}</div>,
     },
     {
         accessorKey: "id",
@@ -82,6 +95,7 @@ export const columns: ColumnDef<Inbound>[] = [
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-2"
           >
             Inbound Date
             <ArrowUpDown className="h-4 w-4" />
@@ -387,7 +401,7 @@ export const columns: ColumnDef<Inbound>[] = [
     },
     {
       accessorKey: "user_putaway",
-      header: "User Loading",
+      header: "User Putaway",
     },
     {
       accessorKey: "year",
@@ -419,14 +433,74 @@ export const columns: ColumnDef<Inbound>[] = [
           <StickyNote className="h-5 w-5 mx-auto" /> {/* The icon with styling */}
         </div>
       ),
-      cell: ({ row }) => {
+      cell: ({ row, column }) => {
         const [showEditDialog, setShowEditDialog] = useState(false);
+        const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+        const onRefresh = column.columnDef.meta?.onRefresh;
+
+        const handleSubmit = async (data: Partial<Inbound>, no: number) => {
+          try {
+            const response = await fetch(`/api/inbound/edit`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                no, // Use the 'no' field as identifier
+                ...data
+              }),
+            });
+      
+            if (!response.ok) {
+              throw new Error('Failed to update record');
+            }
+
+             // Call onRefresh after successful update
+            if (onRefresh) {
+              onRefresh();
+            }
+      
+          } catch (error) {
+            console.error('Failed to update:', error);
+            throw error;
+          }
+        };
+
+        const handleDelete = async () => {
+          try {
+            const response = await fetch(`/api/inbound/delete`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                no: row.original.no // Using 'no' as the identifier
+              }),
+            });
+      
+            if (!response.ok) {
+              throw new Error('Failed to delete record');
+            }
+      
+            // Close the delete dialog
+            setShowDeleteDialog(false);
+      
+            // Refresh the table
+            if (onRefresh) {
+              onRefresh();
+            }
+      
+          } catch (error) {
+            console.error('Failed to delete:', error);
+            throw error;
+          }
+        };
         
         // Specify which columns should be editable
         const editableColumns = [
           "area",
           "inbound_date",
-          "gate_in",
           "inbound_doc_type",
           "inbound_doc",
           "receiving_doc",
@@ -453,12 +527,8 @@ export const columns: ColumnDef<Inbound>[] = [
           "dock_no",
           "doc_status",
           "user_admin",
-          "start_tally",
-          "finish_tally",
           "user_tally",
-          "start_putaway",
-          "finish_putaway",
-          "user_loading",
+          "user_putaway"
         ];
     
         const handleSave = async (updatedData: Partial<Inbound>) => {
@@ -473,7 +543,7 @@ export const columns: ColumnDef<Inbound>[] = [
         };
     
         return (
-          <div className="">
+          <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -486,7 +556,9 @@ export const columns: ColumnDef<Inbound>[] = [
                 <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600 hover:bg-gray-200">
+                <DropdownMenuItem 
+                  className="text-red-600 hover:bg-gray-200"
+                  onClick={() => setShowDeleteDialog(true)}>
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -499,8 +571,20 @@ export const columns: ColumnDef<Inbound>[] = [
               isOpen={showEditDialog}
               onClose={() => setShowEditDialog(false)}
               onSave={handleSave}
+              onSubmit={handleSubmit}
+              primaryKeyField="no"
             />
-          </div>
+
+            <ConfirmDialog
+              open={showDeleteDialog}
+              onOpenChange={setShowDeleteDialog}
+              onContinue={handleDelete}
+              title="Delete Record"
+              description="Are you sure you want to delete this record? This action is irreversible."
+              cancelText="No, Cancel"
+              continueText="Yes, Delete"
+            />
+          </>
         );
       },
     }

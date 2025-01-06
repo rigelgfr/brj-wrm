@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ConfirmDialog from './ui/ConfirmDialog';
 
 interface EditDialogProps<TData> {
   row: TData;
@@ -26,6 +27,8 @@ interface EditDialogProps<TData> {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedData: Partial<TData>) => Promise<void>;
+  onSubmit: (data: Partial<TData>, identifier: any) => Promise<void>;
+  primaryKeyField: keyof TData;
 }
 
 const AREA_OPTIONS = [
@@ -43,6 +46,8 @@ const EditDialog = <TData,>({
   isOpen,
   onClose,
   onSave,
+  onSubmit,
+  primaryKeyField
 }: EditDialogProps<TData>) => {
   const [formData, setFormData] = useState<Partial<TData>>(() => {
     const initialData: Partial<TData> = {};
@@ -53,6 +58,7 @@ const EditDialog = <TData,>({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleInputChange = (key: string, value: any) => {
     setFormData(prev => ({
@@ -62,14 +68,19 @@ const EditDialog = <TData,>({
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    setShowAlert(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
     try {
-      await onSave(formData);
+      setIsSubmitting(true);
+      await onSubmit(formData, row[primaryKeyField]); // Call the passed down onSubmit function
       onClose();
     } catch (error) {
-      console.error('Failed to save changes:', error);
+      console.error('Submit error:', error);
     } finally {
       setIsSubmitting(false);
+      setShowAlert(false);
     }
   };
 
@@ -83,10 +94,10 @@ const EditDialog = <TData,>({
   };
 
   const getDateType = (columnName: string): 'date' | 'time' | 'datetime' | null => {
-    if (columnName === 'inbound_date' || columnName === 'npe_date' || columnName === 'peb_date') {
+    if (columnName.includes('_date')) {
       return 'date';
     }
-    if (columnName === 'gate_in') {
+    if (columnName === 'gate_in' || columnName === 'outbound_time') {
       return 'time';
     }
     if (columnName.includes('start_') || columnName.includes('finish_')) {
@@ -226,6 +237,17 @@ const EditDialog = <TData,>({
             Save Changes
           </Button>
         </DialogFooter>
+          
+        <ConfirmDialog
+          open={showAlert}
+          onOpenChange={setShowAlert}
+          onContinue={handleConfirmedSubmit}
+          title="Save Changes"
+          description="Do you want to save your changes? This action is irreversible."
+          cancelText="No, Cancel"
+          continueText="Yes, Save"
+        />
+        
       </DialogContent>
     </Dialog>
   );

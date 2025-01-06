@@ -1,4 +1,4 @@
-// app/api/inbound/route.ts
+// app/api/operation_in/chart/route.ts
 import { prisma } from "@/src/lib/prisma"
 
 export async function GET(request: Request) {
@@ -19,12 +19,12 @@ export async function GET(request: Request) {
         week_in_month: {
           in: weeks
         },
-        warehouse: {
+        wh_type: {
           in: warehouses
         }
       },
       select: {
-        warehouse: true,
+        wh_type: true,
         week_in_month: true,
         unique_truck_count: true,
         total_volume_int: true,
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         data: warehouses.map(warehouse => ({
           warehouse,
           ...weeks.reduce((acc, week) => {
-            const record = data.find(d => d.warehouse === warehouse && d.week_in_month === week)
+            const record = data.find(d => d.wh_type === warehouse && d.week_in_month === week)
             acc[week] = record?.unique_truck_count ?? 0
             return acc
           }, {} as Record<string, number>)
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
         data: warehouses.map(warehouse => ({
           warehouse,
           ...weeks.reduce((acc, week) => {
-            const record = data.find(d => d.warehouse === warehouse && d.week_in_month === week)
+            const record = data.find(d => d.wh_type === warehouse && d.week_in_month === week)
             acc[week] = record?.total_volume_int ?? 0
             return acc
           }, {} as Record<string, number>)

@@ -28,15 +28,17 @@ model Role {
 }
 
 model warehouses {
-  wh_name       String          @id
-  wh_type       String?         @unique
-  space         Int?
-  max_cap_sqm   Int?
-  max_cap_vol   Int?
-  inbound       inbound[]
-  occupancy_sqm occupancy_sqm[]
-  occupancy_vol occupancy_vol[]
-  outbound      outbound[]
+  wh_name             String                @id
+  wh_type             String?               @unique
+  space               Int?
+  max_cap_sqm         Int?
+  max_cap_vol         Int?
+  inbound             inbound[]
+  inbound_aggregated  inbound_aggregated[]
+  occupancy_sqm       occupancy_sqm[]
+  occupancy_vol       occupancy_vol[]
+  outbound            outbound[]
+  outbound_aggregated outbound_aggregated[]
 }
 
 model inbound {
@@ -89,19 +91,20 @@ model inbound {
 }
 
 model months {
-  month         String          @id @db.VarChar(3)
-  month_full    String?         @unique
-  sort          Int?
-  inbound       inbound[]
-  occupancy_sqm occupancy_sqm[]
-  occupancy_vol occupancy_vol[]
-  outbound      outbound[]
+  month               String                @id @db.VarChar(3)
+  month_full          String?               @unique
+  sort                Int?
+  inbound             inbound[]
+  inbound_aggregated  inbound_aggregated[]
+  occupancy_sqm       occupancy_sqm[]
+  occupancy_vol       occupancy_vol[]
+  outbound            outbound[]
+  outbound_aggregated outbound_aggregated[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model occupancy_sqm {
-  id         Int        @id @default(autoincrement())
   year       Int
   month      String     @db.VarChar(3)
   week       String     @db.VarChar(2)
@@ -112,12 +115,13 @@ model occupancy_sqm {
   weeks      weeks      @relation(fields: [week], references: [week], onDelete: Cascade, onUpdate: NoAction, map: "fk_week")
   warehouses warehouses @relation(fields: [wh_type], references: [wh_type], onDelete: Cascade, onUpdate: NoAction, map: "fk_wh_type")
   years      years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
+
+  @@id([year, month, week, wh_type, status])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model occupancy_vol {
-  id         Int        @id @default(autoincrement())
   year       Int
   month      String     @db.VarChar(3)
   week       String     @db.VarChar(2)
@@ -128,6 +132,8 @@ model occupancy_vol {
   weeks      weeks      @relation(fields: [week], references: [week], onDelete: Cascade, onUpdate: NoAction, map: "fk_week")
   warehouses warehouses @relation(fields: [wh_type], references: [wh_type], onDelete: Cascade, onUpdate: NoAction, map: "fk_wh_type")
   years      years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
+
+  @@id([year, month, week, wh_type, status])
 }
 
 model outbound {
@@ -184,17 +190,21 @@ model outbound {
 }
 
 model weeks {
-  week          String          @id @db.VarChar(2)
-  occupancy_sqm occupancy_sqm[]
-  occupancy_vol occupancy_vol[]
+  week                String                @id @db.VarChar(2)
+  inbound_aggregated  inbound_aggregated[]
+  occupancy_sqm       occupancy_sqm[]
+  occupancy_vol       occupancy_vol[]
+  outbound_aggregated outbound_aggregated[]
 }
 
 model years {
-  year          Int             @id
-  inbound       inbound[]
-  occupancy_sqm occupancy_sqm[]
-  occupancy_vol occupancy_vol[]
-  outbound      outbound[]
+  year                Int                   @id
+  inbound             inbound[]
+  inbound_aggregated  inbound_aggregated[]
+  occupancy_sqm       occupancy_sqm[]
+  occupancy_vol       occupancy_vol[]
+  outbound            outbound[]
+  outbound_aggregated outbound_aggregated[]
 }
 
 model inbound_aggregated {
@@ -202,10 +212,15 @@ model inbound_aggregated {
   year               Int
   month              String
   week_in_month      String
-  total_volume       Decimal? @db.Decimal
+  total_volume       Decimal?   @db.Decimal
   unique_truck_count Int?
   total_truck_count  Int?
-  total_volume_int   Int?     @default(dbgenerated("(total_volume)::integer"))
+  total_volume_int   Int?       @default(dbgenerated("(total_volume)::integer"))
+  wh_type            String?    @default(dbgenerated("\nCASE\n    WHEN (warehouse = 'CFS'::text) THEN 'CFS'::text\n    WHEN (warehouse = 'FREEZONE AB'::text) THEN 'FZ AB'::text\n    WHEN (warehouse = 'FREEZONE BRJ'::text) THEN 'FZ BRJ'::text\n    WHEN (warehouse = 'PLB'::text) THEN 'PLB'::text\n    WHEN (warehouse = 'GB'::text) THEN 'Bonded'::text\n    ELSE 'Other'::text\nEND"))
+  months             months     @relation(fields: [month], references: [month_full], onDelete: Cascade, onUpdate: NoAction, map: "fk_month")
+  warehouses         warehouses @relation(fields: [warehouse], references: [wh_name], onDelete: Cascade, onUpdate: NoAction, map: "fk_warehouse")
+  weeks              weeks      @relation(fields: [week_in_month], references: [week], onDelete: Cascade, onUpdate: NoAction, map: "fk_week")
+  years              years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
 
   @@id([warehouse, year, month, week_in_month])
 }
@@ -215,10 +230,15 @@ model outbound_aggregated {
   year               Int
   month              String
   week_in_month      String
-  total_volume       Decimal? @db.Decimal
+  total_volume       Decimal?   @db.Decimal
   unique_truck_count Int?
   total_truck_count  Int?
-  total_volume_int   Int?     @default(dbgenerated("(total_volume)::integer"))
+  total_volume_int   Int?       @default(dbgenerated("(total_volume)::integer"))
+  wh_type            String?    @default(dbgenerated("\nCASE\n    WHEN (warehouse = 'CFS'::text) THEN 'CFS'::text\n    WHEN (warehouse = 'FREEZONE AB'::text) THEN 'FZ AB'::text\n    WHEN (warehouse = 'FREEZONE BRJ'::text) THEN 'FZ BRJ'::text\n    WHEN (warehouse = 'PLB'::text) THEN 'PLB'::text\n    WHEN (warehouse = 'GB'::text) THEN 'Bonded'::text\n    ELSE 'Other'::text\nEND"))
+  months             months     @relation(fields: [month], references: [month_full], onDelete: Cascade, onUpdate: NoAction, map: "fk_month")
+  warehouses         warehouses @relation(fields: [warehouse], references: [wh_name], onDelete: Cascade, onUpdate: NoAction, map: "fk_warehouse")
+  weeks              weeks      @relation(fields: [week_in_month], references: [week], onDelete: Cascade, onUpdate: NoAction, map: "fk_week")
+  years              years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
 
   @@id([warehouse, year, month, week_in_month])
 }

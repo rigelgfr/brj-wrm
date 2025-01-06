@@ -45,7 +45,7 @@ export default function OperationsData() {
       filters.warehouse.forEach(warehouse => params.append('warehouse', warehouse))
 
       const [inboundRes, outboundRes] = await Promise.all([
-        fetch(`/api/operation_in?${params.toString()}`),
+        fetch(`/api/operation_in/chart?${params.toString()}`),
         fetch(`/api/operation_out?${params.toString()}`)
       ])
       

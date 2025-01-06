@@ -29,19 +29,35 @@ import { Plus } from "lucide-react"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  onRefresh?: () => void
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onRefresh
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+
+  // Enhance columns with onRefresh
+  const enhancedColumns = React.useMemo(
+    () => columns.map(col => {
+      if (col.id === 'actions') {
+        return {
+          ...col,
+          // Pass onRefresh through meta to avoid type issues
+          meta: { ...col.meta, onRefresh }
+        };
+      }
+      return col;
+    }),
+    [columns, onRefresh]
+  );
+
   const table = useReactTable({
     data,
-    columns,
+    columns: enhancedColumns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,

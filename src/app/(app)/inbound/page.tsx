@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Inbound, columns } from "./columns";
 import { DataTable } from "@/src/components/DataTable";
 import Loading from "@/src/components/ui/Loading";
@@ -8,28 +8,33 @@ import Loading from "@/src/components/ui/Loading";
 export default function InboundPage() {
   const [data, setData] = useState<Inbound[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch inbound data on component mount
-  useEffect(() => {
-    const fetchInboundData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch("/api/inbound");
-        if (!response.ok) {
-          throw new Error("Failed to fetch inbound data");
-        }
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching inbound data:", error);
-        setData([]); // Set empty data on failure
-      } finally {
-        setIsLoading(false);
+  const fetchInboundData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/inbound/table");
+      if (!response.ok) {
+        throw new Error("Failed to fetch inbound data");
       }
-    };
+      const result = await response.json();
+      setData(result);
+    } catch (error) {
+      console.error("Error fetching inbound data:", error);
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchInboundData();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, [refreshTrigger]);
+
+  const handleRefresh = useCallback(() => {
+    fetchInboundData();
+  }, [fetchInboundData]);
 
   if (isLoading) {
     return (
@@ -45,7 +50,7 @@ export default function InboundPage() {
         <p className="text-xl font-bold text-green-krnd">Inbound</p>
       </div>
       <div className="flex-1 min-h-0">
-        <DataTable columns={columns} data={data} />
+        <DataTable columns={columns} data={data} onRefresh={handleRefresh} />
       </div>
     </div>
   );

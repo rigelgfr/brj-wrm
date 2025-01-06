@@ -4,6 +4,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const inbounds = await prisma.inbound.findMany({
+      orderBy: {
+        no: "asc"
+      },
       select: {
         no: true,
         area: true,
