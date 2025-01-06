@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 
 export async function DELETE(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const no = searchParams.get("no");
+    const body = await req.json();
+    const { no } = body;
 
     if (!no) {
       return new NextResponse("Missing 'no' parameter", { status: 400 });
@@ -25,7 +25,6 @@ export async function DELETE(req: Request) {
   } catch (error) {
     console.error("[INBOUND_DELETE]", error);
 
-    // Handle specific errors for better feedback
     if (error.code === "P2025") {
       return new NextResponse("Row not found", { status: 404 });
     }

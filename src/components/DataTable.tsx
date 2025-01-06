@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useState } from "react"
 import {
   ColumnDef,
   flexRender,
@@ -21,10 +22,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Button } from "./ui/Button"
 import { Input } from "@/components/ui/input"
-import { Plus } from "lucide-react"
+import FileUploadDialog from './FileUploadDialog';
+import { BetweenHorizonalEnd, BetweenHorizonalStart, Plus, Upload } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -39,6 +47,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   // Enhance columns with onRefresh
   const enhancedColumns = React.useMemo(
@@ -120,13 +129,36 @@ export function DataTable<TData, TValue>({
           >
             Reset
           </Button>
-          <Button
-            variant="default"
-            size="default"
-            className="bg-green-krnd ml-auto"
-          >
-            Add data
-          </Button>
+          <div className="flex gap-2 ml-auto">
+
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="h-8 w-8 p-0 bg-green-krnd" size="lg">
+                  <span className="sr-only">Open menu</span>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-green-krnd text-white">
+                <DropdownMenuLabel className="text-white">Add data</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setShowUploadDialog(true)} className="bg-green-krnd hover:bg-[#659c37]">
+                  <Upload className="h-4 w-4" />
+                  Upload CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="hover:bg-[#659c37]"
+                >
+                  <BetweenHorizonalStart className="h-4 w-4" />
+                  Add row
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+        </div>
+          <FileUploadDialog 
+            open={showUploadDialog}
+            onOpenChange={setShowUploadDialog}
+            onRefresh={onRefresh}
+        />
       </div>
        
       <div className="rounded-md border h-full">

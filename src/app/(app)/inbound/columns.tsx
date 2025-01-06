@@ -475,25 +475,24 @@ export const columns: ColumnDef<Inbound>[] = [
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                no: row.original.no // Using 'no' as the identifier
+                no: row.original.no
               }),
             });
-      
+        
             if (!response.ok) {
               throw new Error('Failed to delete record');
             }
-      
+        
             // Close the delete dialog
             setShowDeleteDialog(false);
-      
+        
             // Refresh the table
             if (onRefresh) {
               onRefresh();
             }
-      
+        
           } catch (error) {
             console.error('Failed to delete:', error);
-            throw error;
           }
         };
         
@@ -583,6 +582,7 @@ export const columns: ColumnDef<Inbound>[] = [
               description="Are you sure you want to delete this record? This action is irreversible."
               cancelText="No, Cancel"
               continueText="Yes, Delete"
+              variant="destructive"
             />
           </>
         );

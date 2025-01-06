@@ -246,6 +246,7 @@ const EditDialog = <TData,>({
           description="Do you want to save your changes? This action is irreversible."
           cancelText="No, Cancel"
           continueText="Yes, Save"
+          variant='success'
         />
         
       </DialogContent>
