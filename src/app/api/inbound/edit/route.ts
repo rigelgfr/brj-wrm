@@ -1,6 +1,7 @@
 // app/api/inbound/edit/route.ts
 import { prisma } from "@/src/lib/prisma";
 import { NextResponse } from "next/server";
+import { updateInboundAggregates } from "../../operation_in/update/route";
 
 const EDITABLE_COLUMNS = [
   "area",
@@ -115,17 +116,12 @@ export async function PATCH(req: Request) {
       }
     });
 
-    //USE FOR LATER
-    // If area or volume was updated, trigger operation_in update
-  //  if (filteredUpdateData.area || filteredUpdateData.volume) {
-    //  await fetch("/api/operation_in/update", {
-      //  method: "POST",
-        //headers: {
-          //"Content-Type": "application/json",
-        //},
-        //body: JSON.stringify(updatedInbound)
-      //});
-    //}
+    try {
+      const result = await updateInboundAggregates();
+      console.log('Aggregate update result:', result);
+    } catch (error) {
+      console.error('Error updating aggregates:', error);
+    }
 
     return NextResponse.json(updatedInbound);
   } catch (error) {

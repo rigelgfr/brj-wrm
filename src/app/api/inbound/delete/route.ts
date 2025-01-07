@@ -1,6 +1,7 @@
 // app/api/inbound/delete/route.ts
 import { prisma } from "@/src/lib/prisma";
 import { NextResponse } from "next/server";
+import { updateInboundAggregates } from "../../operation_in/update/route";
 
 export async function DELETE(req: Request) {
   try {
@@ -17,6 +18,13 @@ export async function DELETE(req: Request) {
         no: parseInt(no, 10),
       },
     });
+
+    try {
+      const result = await updateInboundAggregates();
+      console.log('Aggregate update result:', result);
+    } catch (error) {
+      console.error('Error updating aggregates:', error);
+    }
 
     return NextResponse.json({
       message: "Row deleted successfully",

@@ -1,68 +1,95 @@
-// app/api/operation_in/update/route.ts
-import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+// api/operation_in/update.ts
+import { prisma } from '@/src/lib/prisma';
 
-export async function POST(req: Request) {
+export async function updateInboundAggregates() {
   try {
-    // First, get all the inbound records grouped by warehouse (area)
-    const uniqueHits = await db.inbound.groupBy({
-      by: ['area', 'year', 'month', 'week_in_month'],
-      _sum: {
-        volume: true,
-      },
-      _count: {
-        no: true,
-      }
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+        WITH UniqueHits AS (
+            -- Identifying rows with unique 'id' values (HIT or DUPLICATE)
+            SELECT 
+                id,
+                area AS warehouse,
+                year,
+                month,
+                week_in_month,
+                volume,
+                CASE 
+                    WHEN COUNT(id) OVER (PARTITION BY id) = 1 THEN 'HIT'
+                    ELSE 'DUPLICATE'
+                END AS hit_status
+            FROM inbound
+        ),
+        AggregatedData AS (
+            -- Aggregating data based on warehouse, year, month, week_in_month
+            SELECT 
+                warehouse,
+                year,
+                month,
+                week_in_month,
+                SUM(volume) AS total_volume,
+                COUNT(CASE WHEN hit_status = 'HIT' THEN 1 END) AS unique_truck_count,
+                COUNT(*) AS total_truck_count
+            FROM UniqueHits
+            GROUP BY warehouse, year, month, week_in_month
+        ),
+        -- Get all existing combinations from inbound_aggregated
+        ExistingCombinations AS (
+            SELECT DISTINCT 
+                warehouse,
+                year,
+                month,
+                week_in_month
+            FROM inbound_aggregated
+        ),
+        -- Combine existing combinations with new data to ensure we don't miss any
+        CombinedData AS (
+            SELECT 
+                COALESCE(a.warehouse, e.warehouse) as warehouse,
+                COALESCE(a.year, e.year) as year,
+                COALESCE(a.month, e.month) as month,
+                COALESCE(a.week_in_month, e.week_in_month) as week_in_month,
+                COALESCE(a.total_volume, 0) as total_volume,
+                COALESCE(a.unique_truck_count, 0) as unique_truck_count,
+                COALESCE(a.total_truck_count, 0) as total_truck_count
+            FROM ExistingCombinations e
+            FULL OUTER JOIN AggregatedData a 
+                ON e.warehouse = a.warehouse 
+                AND e.year = a.year 
+                AND e.month = a.month 
+                AND e.week_in_month = a.week_in_month
+        )
+        -- Update existing rows or insert new rows
+        INSERT INTO inbound_aggregated (
+            warehouse, 
+            year, 
+            month, 
+            week_in_month, 
+            total_volume, 
+            unique_truck_count, 
+            total_truck_count
+        )
+        SELECT 
+            warehouse,
+            year,
+            month,
+            week_in_month,
+            total_volume,
+            unique_truck_count,
+            total_truck_count
+        FROM CombinedData
+        ON CONFLICT (warehouse, year, month, week_in_month)
+        DO UPDATE SET
+            total_volume = EXCLUDED.total_volume,
+            unique_truck_count = EXCLUDED.unique_truck_count,
+            total_truck_count = EXCLUDED.total_truck_count;
+      `;
     });
-
-    // Process and upsert the aggregated data
-    for (const hit of uniqueHits) {
-      await db.inboundAggregated.upsert({
-        where: {
-          warehouse_year_month_week_in_month: {
-            warehouse: hit.area,
-            year: hit.year,
-            month: hit.month,
-            week_in_month: hit.week_in_month,
-          }
-        },
-        update: {
-          total_volume: hit._sum.volume || 0,
-          total_truck_count: hit._count.no,
-          // For unique_truck_count, we need a separate query
-          unique_truck_count: await db.inbound.count({
-            where: {
-              area: hit.area,
-              year: hit.year,
-              month: hit.month,
-              week_in_month: hit.week_in_month,
-            },
-            distinct: ['no']
-          })
-        },
-        create: {
-          warehouse: hit.area,
-          year: hit.year,
-          month: hit.month,
-          week_in_month: hit.week_in_month,
-          total_volume: hit._sum.volume || 0,
-          total_truck_count: hit._count.no,
-          unique_truck_count: await db.inbound.count({
-            where: {
-              area: hit.area,
-              year: hit.year,
-              month: hit.month,
-              week_in_month: hit.week_in_month,
-            },
-            distinct: ['no']
-          })
-        }
-      });
-    }
-
-    return NextResponse.json({ message: "Operation data updated successfully" });
+    return { success: true };
   } catch (error) {
-    console.error("[OPERATION_UPDATE]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error('Error updating aggregates:', error);
+    return { success: false, error };
+  } finally {
+    await prisma.$disconnect();
   }
 }

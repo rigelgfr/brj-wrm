@@ -1,6 +1,8 @@
+// api/inbound/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'csv-parse';
 import { prisma } from '@/src/lib/prisma';
+import { updateInboundAggregates } from '../../operation_in/update/route';
 
 // Helper function to convert string to number with comma handling
 const processNumeric = (value: string | null | undefined): number => {
@@ -170,6 +172,13 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    try {
+      const result = await updateInboundAggregates();
+      console.log('Aggregate update result:', result);
+    } catch (error) {
+      console.error('Error updating aggregates:', error);
+    }
+    
     return NextResponse.json({
       message: 'CSV file processed successfully',
       recordCount: processedData.length
