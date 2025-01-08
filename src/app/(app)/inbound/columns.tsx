@@ -500,6 +500,7 @@ export const columns: ColumnDef<Inbound>[] = [
         const editableColumns = [
           "area",
           "inbound_date",
+          "gate_in",
           "inbound_doc_type",
           "inbound_doc",
           "receiving_doc",
@@ -526,7 +527,11 @@ export const columns: ColumnDef<Inbound>[] = [
           "dock_no",
           "doc_status",
           "user_admin",
+          "start_tally",
+          "finish_tally",
           "user_tally",
+          "start_putaway",
+          "finish_putaway",
           "user_putaway"
         ];
     

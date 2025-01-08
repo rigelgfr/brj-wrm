@@ -32,7 +32,7 @@ import {
 import { Button } from "./ui/Button"
 import { Input } from "@/components/ui/input"
 import FileUploadDialog from './FileUploadDialog';
-import { BetweenHorizonalEnd, BetweenHorizonalStart, Plus, Upload } from "lucide-react"
+import { BetweenHorizonalStart, Plus, Upload } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -88,38 +88,39 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex mb-2">
-        <Input
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex space-x-2">
+          <Input
             placeholder="Filter warehouse..."
             value={(table.getColumn("area")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("area")?.setFilterValue(event.target.value)
             }
-            className="w-1/6 mr-2"
+            className="w-1/6"
           />
-            <Input
+          <Input
             placeholder="Filter customer..."
             value={(table.getColumn("customer_name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("customer_name")?.setFilterValue(event.target.value)
             }
-            className="w-1/6 mr-2"
+            className="w-1/6"
           />
-            <Input
+          <Input
             placeholder="Filter shipper..."
             value={(table.getColumn("shipper_name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("shipper_name")?.setFilterValue(event.target.value)
             }
-            className="w-1/6 mr-2"
+            className="w-1/6"
           />
-            <Input
+          <Input
             placeholder="Filter item..."
             value={(table.getColumn("item_name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("item_name")?.setFilterValue(event.target.value)
             }
-            className="w-1/6 mr-2"
+            className="w-1/6"
           />
           <Button
             onClick={resetFiltersAndSorting}
@@ -129,37 +130,24 @@ export function DataTable<TData, TValue>({
           >
             Reset
           </Button>
-          <div className="flex gap-2 ml-auto">
-
-          <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="h-8 w-8 p-0 bg-green-krnd" size="lg">
-                  <span className="sr-only">Open menu</span>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-green-krnd text-white">
-                <DropdownMenuLabel className="text-white">Add data</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => setShowUploadDialog(true)} className="bg-green-krnd hover:bg-[#659c37]">
-                  <Upload className="h-4 w-4" />
-                  Upload CSV
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-[#659c37]"
-                >
-                  <BetweenHorizonalStart className="h-4 w-4" />
-                  Add row
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
         </div>
-          <FileUploadDialog 
-            open={showUploadDialog}
-            onOpenChange={setShowUploadDialog}
-            onRefresh={onRefresh}
-        />
+        <Button
+          onClick={() => setShowUploadDialog(true)}
+          variant={"default"}
+          size={"default"}
+          className="bg-green-krnd hover:bg-[#659c37] px-2"
+        >
+          <Upload />
+          Upload CSV
+        </Button>
       </div>
+
+      <FileUploadDialog 
+        open={showUploadDialog}
+        onOpenChange={setShowUploadDialog}
+        onRefresh={onRefresh}
+      />
+
        
       <div className="rounded-md border h-full">
         <Table>
