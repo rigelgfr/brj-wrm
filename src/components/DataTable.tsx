@@ -22,40 +22,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { Button } from "./ui/Button"
 import { Input } from "@/components/ui/input"
 import FileUploadDialog from './FileUploadDialog';
-import { BetweenHorizonalStart, Plus, Upload } from "lucide-react"
+import { Upload } from "lucide-react"
+
+// Define the filter configuration type
+interface FilterConfig {
+  id: string
+  placeholder: string
+  width?: string
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   onRefresh?: () => void
+  filters?: FilterConfig[] // Make filters optional
+  showUpload?: boolean // Optional prop to control upload button visibility
+  isInbound?: boolean
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  onRefresh
+  onRefresh,
+  filters = [], // Default to empty array if not provided
+  showUpload = true, // Default to true to maintain backward compatibility
+  isInbound
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
-  // Enhance columns with onRefresh
   const enhancedColumns = React.useMemo(
     () => columns.map(col => {
       if (col.id === 'actions') {
         return {
           ...col,
-          // Pass onRefresh through meta to avoid type issues
           meta: { ...col.meta, onRefresh }
         };
       }
@@ -80,76 +85,61 @@ export function DataTable<TData, TValue>({
   });
 
   const resetFiltersAndSorting = () => {
-    setSorting([]); // Reset sorting
-    setColumnFilters([]); // Reset all column filters
-    table.resetSorting(); // Optional: ensure table state is in sync
-    table.resetColumnFilters(); // Optional: ensure table state is in sync
+    setSorting([]);
+    setColumnFilters([]);
+    table.resetSorting();
+    table.resetColumnFilters();
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <div className="flex space-x-2">
-          <Input
-            placeholder="Filter warehouse..."
-            value={(table.getColumn("area")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("area")?.setFilterValue(event.target.value)
-            }
-            className="w-1/6"
-          />
-          <Input
-            placeholder="Filter customer..."
-            value={(table.getColumn("customer_name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("customer_name")?.setFilterValue(event.target.value)
-            }
-            className="w-1/6"
-          />
-          <Input
-            placeholder="Filter shipper..."
-            value={(table.getColumn("shipper_name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("shipper_name")?.setFilterValue(event.target.value)
-            }
-            className="w-1/6"
-          />
-          <Input
-            placeholder="Filter item..."
-            value={(table.getColumn("item_name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("item_name")?.setFilterValue(event.target.value)
-            }
-            className="w-1/6"
-          />
+        {filters.length > 0 && (
+          <div className="flex space-x-2">
+            {filters.map((filter) => (
+              <Input
+                key={filter.id}
+                placeholder={filter.placeholder}
+                value={(table.getColumn(filter.id)?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn(filter.id)?.setFilterValue(event.target.value)
+                }
+                className={filter.width ? filter.width : "w-1/6"}
+              />
+            ))}
+            <Button
+              onClick={resetFiltersAndSorting}
+              variant="outline"
+              size="default"
+              className="text-darkgrey-krnd"
+            >
+              Reset
+            </Button>
+          </div>
+        )}
+        {showUpload && (
           <Button
-            onClick={resetFiltersAndSorting}
-            variant="outline"
+            onClick={() => setShowUploadDialog(true)}
+            variant="default"
             size="default"
-            className="text-darkgrey-krnd"
+            className="bg-green-krnd hover:bg-[#659c37] px-2"
           >
-            Reset
+            <Upload />
+            Upload CSV
           </Button>
-        </div>
-        <Button
-          onClick={() => setShowUploadDialog(true)}
-          variant={"default"}
-          size={"default"}
-          className="bg-green-krnd hover:bg-[#659c37] px-2"
-        >
-          <Upload />
-          Upload CSV
-        </Button>
+        )}
       </div>
 
-      <FileUploadDialog 
-        open={showUploadDialog}
-        onOpenChange={setShowUploadDialog}
-        onRefresh={onRefresh}
-      />
+      {showUpload && (
+        <FileUploadDialog 
+          open={showUploadDialog}
+          onOpenChange={setShowUploadDialog}
+          onRefresh={onRefresh}
+          isInbound={isInbound === true ? true : false}
+        />
+      )}
 
-       
-      <div className="rounded-md border h-full">
+<div className="rounded-md border h-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -233,6 +223,5 @@ export function DataTable<TData, TValue>({
         </Button>
       </div>
     </div>
-    
   )
 }

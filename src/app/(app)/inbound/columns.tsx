@@ -2,8 +2,7 @@
 import { useState } from "react";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, StickyNote } from "lucide-react";
-import { ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, StickyNote, ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/src/components/ui/Button";
 import {
@@ -500,7 +499,6 @@ export const columns: ColumnDef<Inbound>[] = [
         const editableColumns = [
           "area",
           "inbound_date",
-          "gate_in",
           "inbound_doc_type",
           "inbound_doc",
           "receiving_doc",
@@ -527,24 +525,9 @@ export const columns: ColumnDef<Inbound>[] = [
           "dock_no",
           "doc_status",
           "user_admin",
-          "start_tally",
-          "finish_tally",
           "user_tally",
-          "start_putaway",
-          "finish_putaway",
           "user_putaway"
         ];
-    
-        const handleSave = async (updatedData: Partial<Inbound>) => {
-          try {
-            // Add your update API call here
-            console.log('Updating record:', row.original.id, updatedData);
-            // await updateRecord(row.original.id, updatedData);
-          } catch (error) {
-            console.error('Failed to update:', error);
-            throw error;
-          }
-        };
     
         return (
           <>
@@ -556,7 +539,6 @@ export const columns: ColumnDef<Inbound>[] = [
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
                   Edit
                 </DropdownMenuItem>
@@ -574,7 +556,6 @@ export const columns: ColumnDef<Inbound>[] = [
               editableColumns={editableColumns}
               isOpen={showEditDialog}
               onClose={() => setShowEditDialog(false)}
-              onSave={handleSave}
               onSubmit={handleSubmit}
               primaryKeyField="no"
             />

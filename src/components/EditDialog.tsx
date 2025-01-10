@@ -26,7 +26,6 @@ interface EditDialogProps<TData> {
   editableColumns: string[];
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedData: Partial<TData>) => Promise<void>;
   onSubmit: (data: Partial<TData>, identifier: any) => Promise<void>;
   primaryKeyField: keyof TData;
 }
@@ -45,7 +44,6 @@ const EditDialog = <TData,>({
   editableColumns,
   isOpen,
   onClose,
-  onSave,
   onSubmit,
   primaryKeyField
 }: EditDialogProps<TData>) => {

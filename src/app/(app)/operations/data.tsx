@@ -46,7 +46,7 @@ export default function OperationsData() {
 
       const [inboundRes, outboundRes] = await Promise.all([
         fetch(`/api/operation_in/chart?${params.toString()}`),
-        fetch(`/api/operation_out?${params.toString()}`)
+        fetch(`/api/operation_out/chart?${params.toString()}`)
       ])
       
       if (!inboundRes.ok || !outboundRes.ok) {

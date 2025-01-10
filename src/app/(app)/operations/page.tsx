@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import OperationsData from './data'
 
 export default function OperationsPage() {

@@ -1,18 +1,18 @@
 "use client";
+import { useState } from "react";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
-import { ArrowUpDown } from "lucide-react";
+import { MoreHorizontal, StickyNote, ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/src/components/ui/Button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import EditDialog from "@/src/components/EditDialog";
+import ConfirmDialog from "@/src/components/ui/ConfirmDialog";
 
 // Define the shape of the outbound data
 export type Outbound = {
@@ -50,11 +50,11 @@ export type Outbound = {
   remark: string | null;
   doc_status: string | null;
   user_admin: string | null;
-  start_picking: Date | null;
-  finish_picking: Date | null;
+  start_picking: string | null;
+  finish_picking: string | null;
   user_picking: string | null;
-  start_loading: Date | null;
-  finish_loading: Date | null;
+  start_loading: string | null;
+  finish_loading: string | null;
   user_loading: string | null;
   id: string;
   year: number;
@@ -66,7 +66,19 @@ export type Outbound = {
 export const columns: ColumnDef<Outbound>[] = [
     {
       accessorKey: "no",
-      header: "No",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-2"
+          >
+            No
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => <div className="text-center">{row.getValue("no")}</div>,
     },
     {
         accessorKey: "id",
@@ -396,30 +408,166 @@ export const columns: ColumnDef<Outbound>[] = [
     },
     {
       id: "actions",
-      cell: ({ row }) => {
-        const payment = row.original
-   
+      header: () => (
+        <div className="flex items-center">
+          <StickyNote className="h-5 w-5 mx-auto" /> {/* The icon with styling */}
+        </div>
+      ),
+      cell: ({ row, column }) => {
+        const [showEditDialog, setShowEditDialog] = useState(false);
+        const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+        const onRefresh = column.columnDef.meta?.onRefresh;
+
+        const handleSubmit = async (data: Partial<Outbound>, no: number) => {
+          try {
+            const response = await fetch(`/api/outbound/edit`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                no, // Use the 'no' field as identifier
+                ...data
+              }),
+            });
+      
+            if (!response.ok) {
+              throw new Error('Failed to update record');
+            }
+
+             // Call onRefresh after successful update
+            if (onRefresh) {
+              onRefresh();
+            }
+      
+          } catch (error) {
+            console.error('Failed to update:', error);
+            throw error;
+          }
+        };
+
+        const handleDelete = async () => {
+          try {
+            const response = await fetch(`/api/outbound/delete`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                no: row.original.no
+              }),
+            });
+        
+            if (!response.ok) {
+              throw new Error('Failed to delete record');
+            }
+        
+            // Close the delete dialog
+            setShowDeleteDialog(false);
+        
+            // Refresh the table
+            if (onRefresh) {
+              onRefresh();
+            }
+        
+          } catch (error) {
+            console.error('Failed to delete:', error);
+          }
+        };
+        
+        // Specify which columns should be editable
+        const editableColumns = [
+            "area",
+            "outbound_date",
+            "loading_date",
+            "outbound_doc_type",
+            "outbound_doc",
+            "picking_doc",
+            "loading_doc",
+            "customer_name",
+            "shipper_name",
+            "item_code",
+            "item_name",
+            "doc_qty",
+            "qty",
+            "uom",
+            "nett_weight",
+            "gross_weight",
+            "volume",
+            "batch",
+            "bl_do",
+            "aju_no",
+            "truck_type",
+            "truck_no",
+            "container_no",
+            "seal_no",
+            "vessel_name",
+            "voyage_no",
+            "destination",
+            "recipient",
+            "shipping_notes",
+            "remark",
+            "doc_status",
+            "user_admin",
+            "user_picking",
+            "user_loading",
+        ];
+    
+        const handleSave = async (updatedData: Partial<Outbound>) => {
+          try {
+            // Add your update API call here
+            console.log('Updating record:', row.original.id, updatedData);
+            // await updateRecord(row.original.id, updatedData);
+          } catch (error) {
+            console.error('Failed to update:', error);
+            throw error;
+          }
+        };
+    
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.id)}
-              >
-                Copy payment ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>View customer</DropdownMenuItem>
-              <DropdownMenuItem>View payment details</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-red-600 hover:bg-gray-200"
+                  onClick={() => setShowDeleteDialog(true)}>
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+    
+            <EditDialog
+              row={row.original}
+              columns={columns}
+              editableColumns={editableColumns}
+              isOpen={showEditDialog}
+              onClose={() => setShowEditDialog(false)}
+              onSubmit={handleSubmit}
+              primaryKeyField="no"
+            />
+
+            <ConfirmDialog
+              open={showDeleteDialog}
+              onOpenChange={setShowDeleteDialog}
+              onContinue={handleDelete}
+              title="Delete Record"
+              description="Are you sure you want to delete this record? This action is irreversible."
+              cancelText="No, Cancel"
+              continueText="Yes, Delete"
+              variant="destructive"
+            />
+          </>
+        );
       },
-    },
+    }
   ];

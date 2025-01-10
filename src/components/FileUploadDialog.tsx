@@ -1,4 +1,3 @@
-// First, create a FileUploadDialog.tsx component
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -8,18 +7,19 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/src/components/ui/Button";
-import { Upload } from "lucide-react";
 
 interface FileUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRefresh?: () => void;
+  isInbound?: boolean;
 }
 
 const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   open,
   onOpenChange,
-  onRefresh
+  onRefresh,
+  isInbound
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -47,11 +47,12 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/inbound/upload', {
+      const endpoint = isInbound ? '/api/inbound/upload' : '/api/outbound/upload';
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });
-
+      
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error);
@@ -63,7 +64,7 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
         onRefresh();
       }
     } catch (err) {
-      setError(err.message || 'Failed to upload file');
+      setError(err instanceof Error ? err.message : 'Failed to upload file');
     } finally {
       setUploading(false);
     }
@@ -75,7 +76,8 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Upload CSV File</DialogTitle>
           <DialogDescription>
-            Upload a CSV file containing inbound data. Make sure it follows the required format.
+            Upload a CSV file containing {isInbound ? 'inbound' : 'outbound'} data. 
+            Make sure it follows the required format.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">

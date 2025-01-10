@@ -10,6 +10,13 @@ export default function InboundPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  const inboundOutboundFilters = [
+    { id: "area", placeholder: "Filter warehouse..." },
+    { id: "customer_name", placeholder: "Filter customer..." },
+    { id: "shipper_name", placeholder: "Filter shipper..." },
+    { id: "item_name", placeholder: "Filter item..." },
+  ];
+
   // Fetch inbound data on component mount
   const fetchInboundData = async () => {
     setIsLoading(true);
@@ -36,21 +43,25 @@ export default function InboundPage() {
     fetchInboundData();
   }, [fetchInboundData]);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <Loading /> {/* Display a loading indicator */}
-      </div>
-    );
-  }
-
   return (
     <div className="mx-[2em] p-4 flex flex-col space-y-4 bg-white shadow-md">
       <div className="flex-none">
         <p className="text-xl font-bold text-green-krnd">Inbound</p>
       </div>
       <div className="flex-1 min-h-0">
-        <DataTable columns={columns} data={data} onRefresh={handleRefresh} />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-full">
+            <Loading /> {/* Display a loading indicator */}
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={data}
+            onRefresh={handleRefresh}
+            filters={inboundOutboundFilters}
+            isInbound={true}
+          />
+        )}
       </div>
     </div>
   );

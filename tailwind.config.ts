@@ -15,6 +15,7 @@ const config: Config = {
   			'green-krnd': '#7EAF45',
   			'lightgrey-krnd': '#848484',
   			'darkgrey-krnd': '#323033',
+			'green-fade': '#d3e8ba',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
