@@ -142,7 +142,7 @@ const createColumns = (unit: string, tableType: 'sqm' | 'vol'): ColumnDef<Occupa
 
           <EditDialog
             row={row.original}
-            columns={createColumns(unit)}
+            columns={createColumns(unit, tableType)}
             editableColumns={editableColumns}
             isOpen={showEditDialog}
             onClose={() => setShowEditDialog(false)}
@@ -194,9 +194,9 @@ export function InventoryTables() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Filters and Upload Section */}
-      <div className="flex items-center justify-between mb-2 py-2 sticky top-0 bg-white z-10">
+      <div className="flex items-center justify-between">
         <div className="flex space-x-2">
         <Input
             placeholder="Year"

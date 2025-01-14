@@ -4,7 +4,7 @@ import { OccupancySqmData } from "./data"
 
 export default function OccupancySqmPage() {
   return (
-    <div className="mx-[2em] p-4 flex flex-col space-y-4 bg-white shadow-md">
+    <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
       <div className="flex-none">
         <p className="text-xl font-bold text-green-krnd">Occupancy (sqm)</p>
       </div>
