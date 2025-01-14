@@ -55,7 +55,7 @@ export function OccupancyVolData() {
             week,
           });
           
-          const response = await fetch(`/api/occupancy_vol?${params.toString()}`);
+          const response = await fetch(`/api/occupancy/vol?${params.toString()}`);
           const data = await response.json();
           return { week, data };
         })

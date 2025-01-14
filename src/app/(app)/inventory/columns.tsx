@@ -5,11 +5,12 @@ import { useState, useEffect } from "react";
 import { ColumnDef, ColumnFiltersState } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/src/components/ui/Button";
-import { Upload, StickyNote, MoreHorizontal } from "lucide-react";
+import { StickyNote, MoreHorizontal, Plus } from "lucide-react";
 import { BasicTable } from "@/src/components/BasicTable";
-import FileUploadDialog from "@/src/components/FileUploadDialog";
+import AddOccupancyDialog from '@/src/components/AddOccupancyDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import EditDialog from "@/src/components/EditDialog";
+import Loading from "@/src/components/ui/Loading";
 
 // Types remain the same
 export type OccupancySqm = {
@@ -157,11 +158,12 @@ export const occupancySqmColumns = createColumns("m²", 'sqm');
 export const occupancyVolColumns = createColumns("m³", 'vol');
 
 export function InventoryTables() {
-  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showAddRowDialog, setShowAddRowDialog] = useState(false);
   const [sqmData, setSqmData] = useState<OccupancySqm[]>([]);
   const [volData, setVolData] = useState<OccupancyVol[]>([]);
   const [sqmFilters, setSqmFilters] = useState<ColumnFiltersState>([]);
   const [volFilters, setVolFilters] = useState<ColumnFiltersState>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [pagination, setPagination] = useState<PaginationState>({
   pageIndex: 0,
@@ -169,6 +171,7 @@ export function InventoryTables() {
   });
 
   const fetchData = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/inventory/table");
       const data = await response.json();
@@ -176,6 +179,8 @@ export function InventoryTables() {
       setVolData(data.occupancyVol);
     } catch (error) {
       console.error("Error fetching inventory data:", error);
+    } finally {
+      setIsLoading(false)    
     }
   };
 
@@ -300,24 +305,26 @@ export function InventoryTables() {
           </Button>
         </div>
         <Button
-          onClick={() => setShowUploadDialog(true)}
+          onClick={() => setShowAddRowDialog(true)}
           variant="default"
           size="default"
           className="bg-green-krnd hover:bg-[#659c37] px-2"
         >
-          <Upload />
-          Upload CSV
+          <Plus className="h-4 w-4" />
+          Add data
         </Button>
       </div>
 
-      <FileUploadDialog 
-        open={showUploadDialog}
-        onOpenChange={setShowUploadDialog}
+      <AddOccupancyDialog 
+        isOpen={showAddRowDialog}
+        onClose={() => setShowAddRowDialog(false)}
         onRefresh={fetchData}
-        isInbound={false}
       />
 
-      <div className="flex flex-row space-x-4 w-full">
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <div className="flex flex-row space-x-4 w-full">
         <div className="w-1/2 flex flex-col">
           <h2 className="text-md font-semibold mb-2">SQM Occupancy</h2>
           <div className="flex-1 flex flex-col">
@@ -353,7 +360,8 @@ export function InventoryTables() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Separated pagination controls */}
       <div className="w-full mt-4 border-t pt-4">

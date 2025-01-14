@@ -1,82 +1,101 @@
-// components/SlidingMenu.tsx
-import { useEffect, useState } from 'react';
-import type { MenuSection as MenuSectionType } from './types';
-import { MenuSection } from './MenuSection';
-import { User, X } from 'lucide-react';
-import { Button } from './ui/Button';  // Use your custom Button
+import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { Button } from '@/src/components/ui/Button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Session } from 'next-auth';
+import { signOut } from 'next-auth/react';
 
-interface SlidingMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-  menuItems: MenuSectionType[];
-  session: Session;
+interface MenuItem {
+  icon: JSX.Element;
+  label: string;
+  href: string;
 }
 
-export const SlidingMenu = ({ isOpen, onClose, menuItems, session }: SlidingMenuProps) => {
-  const [menuWidth, setMenuWidth] = useState('33.333vw');
+interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
 
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setMenuWidth('100vw');
-      } else if (width < 1024) {
-        setMenuWidth('50vw');
-      } else {
-        setMenuWidth('33.333vw');
-      }
-    };
+interface SlidingMenuProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  session: Session | null;
+}
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+const menuSections: MenuSection[] = [
+  {
+    title: 'Navigation',
+    items: [
+      { icon: <LayoutDashboard className="w-4 h-4" />, label: 'Dashboard', href: '/dashboard' },
+      { icon: <Factory className="w-4 h-4" />, label: 'Operations', href: '/operations' },
+      { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (SQM)', href: '/occupancy/sqm' },
+      { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (VOL)', href: '/occupancy/vol' },
+    ]
+  },
+  {
+    title: 'Data',
+    items: [
+      { icon: <ArrowDownToLine className="w-4 h-4" />, label: 'Inbound', href: '/inbound' },
+      { icon: <ArrowUpFromLine className="w-4 h-4" />, label: 'Outbound', href: '/outbound' },
+      { icon: <Database className="w-4 h-4" />, label: 'Inventory', href: '/inventory' },
+    ]
+  }
+];
+
+export default function SlidingMenu({ open, onOpenChange, session }: SlidingMenuProps) {
+  if (!session) return null;
 
   return (
-    <div 
-      style={{ width: menuWidth }}
-      className={`fixed top-0 right-0 h-full bg-white shadow-lg transform transition-all duration-300 ease-in-out z-50 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <div className="flex flex-col h-full">
-        {/* Menu Header */}
-        <div className="bg-darkgrey-krnd text-primary-foreground p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">Menu</h2>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={onClose}
-              className="text-primary-foreground hover:bg-primary/90"
-            >
-              <X className="h-6 w-6" />
-              <span className="sr-only">Close menu</span>
-            </Button>
-          </div>
-          
-          <div className="flex items-center">
-          <User className="h-10 w-10 mr-4" />
-            <div>
-              <p className="font-medium text-lg">{session.user?.name}</p>
-              <p className="text-sm opacity-75">{session.user?.roleName}</p>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetTrigger></SheetTrigger>
+      <SheetContent
+        side="right"
+        className='w-[400px]'
+      >
+        <SheetHeader className="mb-6">
+          <SheetTitle>{session.user?.name}</SheetTitle>
+          <p className="text-sm text-muted-foreground">{session.user?.email}</p>
+        </SheetHeader>
+
+        {/* Navigation Sections */}
+        <div className="space-y-6">
+          {menuSections.map((section, index) => (
+            <div key={index} className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground tracking-wider">
+                {section.title}
+              </h3>
+              <nav className="space-y-1">
+                {section.items.map((item, itemIndex) => (
+                  <a
+                    key={itemIndex}
+                    href={item.href}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </a>
+                ))}
+              </nav>
             </div>
-          </div>
+          ))}
         </div>
 
-        {/* Menu Items */}
-        <nav className="flex-grow overflow-y-auto p-4">
-          {menuItems.map((section, index) => (
-            <MenuSection
-              key={index}
-              section={section}
-              isLast={index === menuItems.length - 1}
-              onItemClick={onClose}
-            />
-          ))}
-        </nav>
-      </div>
-    </div>
+        {/* Sign Out Button */}
+        <Button
+          variant="ghost"
+          className="w-full mt-6 flex items-center gap-2 bg-red-500 hover:bg-red-600 hover:text-white text-white"
+          onClick={() => signOut()}
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </Button>
+      </SheetContent>
+    </Sheet>
   );
-};
+}

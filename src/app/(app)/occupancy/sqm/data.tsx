@@ -44,7 +44,7 @@ export function OccupancySqmData() {
       if (filters.month.length) params.append('month', filters.month[0])
       if (filters.week.length) params.append('week', filters.week[0])
 
-      const response = await fetch(`/api/occupancy_sqm?${params.toString()}`)
+      const response = await fetch(`/api/occupancy/sqm?${params.toString()}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch occupancy data')

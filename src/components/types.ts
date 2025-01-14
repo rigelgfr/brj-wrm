@@ -1,14 +1,3 @@
-// types.ts
-export interface MenuItem {
-    icon: React.ReactNode;
-    label: string;
-  }
-  
-  export interface MenuSection {
-    heading: string;
-    items: MenuItem[];
-  }
-
   export type FilterOption = {
     value: string;
     label: string;

@@ -2,47 +2,21 @@
 
 // components/Header.tsx (your modified header)
 import { useState } from 'react';
-import { User, Menu, Home, Info, Mail, Settings, LogOut } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Session } from 'next-auth';
-import { MenuOverlay } from './MenuOverlay';
-import { SlidingMenu } from './SlidingMenu';
-import type { MenuSection } from './types';
+import SlidingMenu from './SlidingMenu';
 
 interface HeaderProps {
   appName?: string;
   session: Session | null;
 }
 
-const menuItems: MenuSection[] = [
-  {
-    heading: "Navigation",
-    items: [
-      { icon: <Home className="mr-2 h-4 w-4" />, label: 'Dashboard' },
-      { icon: <Info className="mr-2 h-4 w-4" />, label: 'About' },
-      { icon: <Mail className="mr-2 h-4 w-4" />, label: 'Contact' },
-    ]
-  },
-  {
-    heading: "Account",
-    items: [
-      { icon: <Settings className="mr-2 h-4 w-4" />, label: 'Settings' },
-    ]
-  },
-  {
-    heading: "Session",
-    items: [
-      { icon: <LogOut className="mr-2 h-4 w-4" />, label: 'Logout' },
-    ]
-  }
-];
-
 export default function Header({ 
   appName = "MyApp",
   session
 }: HeaderProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleMenu = () => setIsOpen(!isOpen);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!session) return null;
 
@@ -63,8 +37,7 @@ export default function Header({
             <Button 
               variant="ghost"
               size="icon"
-              onClick={toggleMenu}
-              className="rounded-full"
+              onClick={() => setMenuOpen(true)}
             >
               <Menu className="h-6 w-6" />
               <span className="sr-only">Open menu</span>
@@ -73,13 +46,11 @@ export default function Header({
         </div>
       </header>
 
-      <MenuOverlay isOpen={isOpen} onClose={toggleMenu} />
-      
-      <SlidingMenu
-        isOpen={isOpen}
-        onClose={toggleMenu}
-        menuItems={menuItems}
-        session={session}
+
+      <SlidingMenu 
+        open={menuOpen} 
+        onOpenChange={setMenuOpen}
+        session={session} 
       />
     </>
   );
