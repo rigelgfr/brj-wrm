@@ -1,184 +1,307 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useRouter } from 'next/router';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowUpRight } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Label } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Truck, Box, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface DashboardData {
-  occupancySqm: OccupancyData[];
-  occupancyVol: OccupancyData[];
-}
+export const TruckDataCard = ({ currentMonth }) => (
+  <Card onClick={() => { console.log("Clicked") }}>
+    <CardContent className="p-6">
+      <div className="flex flex-col space-y-2">
+        <div className="flex items-center space-x-2">
+          <Truck className="h-5 w-5 text-green-600" />
+          <h2 className="text-sm font-medium text-muted-foreground">Total Trucks In/Out last month</h2>
+        </div>
+        <div className='grid grid-cols-2'>
+          <div className="flex items-baseline space-x-2 justify-center border-r">
+            <h3 className="text-2xl font-bold">{currentMonth?.inboundTrucks || 0}</h3>
+            <span className="text-sm text-muted-foreground">in</span>
+          </div>
+          <div className="flex items-baseline space-x-2 justify-center border-l">
+            <h3 className="text-2xl font-bold">{currentMonth?.outboundTrucks || 0}</h3>
+            <span className="text-sm text-muted-foreground">out</span>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
-interface OccupancyData {
-  year: number;
-  month: string;
-  week: string;
-  wh_type: string;
-  status: string;
-  space: number;
-}
+export const VolumeDataCard = ({ currentMonth }) => (
+  <Card>
+    <CardContent className="p-6">
+      <div className="flex flex-col space-y-2">
+        <div className="flex items-center space-x-2">
+          <Box className="h-5 w-5 text-green-600" />
+          <h2 className="text-sm font-medium text-muted-foreground">Total Volume In/Out last month</h2>
+        </div>
+        <div className='grid grid-cols-2 text-2xl'>
+          <div className="flex items-baseline space-x-2 justify-center border-r">
+            <h3 className="font-bold">{currentMonth?.inboundVolume || 0}</h3>
+            <span className="text-sm text-muted-foreground">in</span>
+          </div>
+          <div className="flex items-baseline space-x-2 justify-center border-l">
+            <h3 className="font-bold">{currentMonth?.outboundVolume || 0}</h3>
+            <span className="text-sm text-muted-foreground">out</span>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
-const useCurrentTime = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
+export const TruckTrendsChart = ({ data, isLoading, error, maxTrucks }) => (
+  <Card className="col-span-2">
+    <CardHeader>
+      <CardTitle>Monthly Truck Trends</CardTitle>
+    </CardHeader>
+    <CardContent>
+      {isLoading ? (
+        <div className="h-[300px] flex items-center justify-center">
+          Loading...
+        </div>
+      ) : error ? (
+        <div className="h-[300px] flex items-center justify-center text-red-500">
+          Error: {error}
+        </div>
+      ) : (
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <XAxis 
+                dataKey="month" 
+                tickFormatter={(value) => value.substring(0, 3)}
+              />
+              <YAxis 
+                domain={[0, maxTrucks]}
+                allowDataOverflow={false}
+              />
+              <Tooltip />
+              <Line 
+                type="monotone" 
+                dataKey="inboundTrucks" 
+                stroke="#16a34a" 
+                name="Truck In"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="outboundTrucks" 
+                stroke="#2563eb" 
+                name="Truck Out"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
+
+export const VolumeTrendsChart = ({ data, isLoading, error, maxVolume }) => (
+  <Card className="col-span-2">
+    <CardHeader>
+      <CardTitle>Monthly Volume Trends</CardTitle>
+    </CardHeader>
+    <CardContent>
+      {isLoading ? (
+        <div className="h-[300px] flex items-center justify-center">
+          Loading...
+        </div>
+      ) : error ? (
+        <div className="h-[300px] flex items-center justify-center text-red-500">
+          Error: {error}
+        </div>
+      ) : (
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <XAxis 
+                dataKey="month" 
+                tickFormatter={(value) => value.substring(0, 3)}
+              />
+              <YAxis 
+                domain={[0, maxVolume]}
+                allowDataOverflow={false}
+              />
+              <Tooltip />
+              <Line 
+                type="monotone" 
+                dataKey="inboundVolume" 
+                stroke="#16a34a" 
+                name="Volume In"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="outboundVolume" 
+                stroke="#2563eb" 
+                name="Volume Out"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
+
+export const OccupancyDonut = ({ occupancyData, title }) => {
+  const [warehouseTypes, setWarehouseTypes] = useState([]);
+  const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
+  const [processedData, setProcessedData] = useState([]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    if (!occupancyData?.data || !Array.isArray(occupancyData.data)) {
+      return;
+    }
 
-    return () => clearInterval(timer);
-  }, []);
+    // Group data by warehouse type
+    const groupedData = {};
+    
+    occupancyData.data.forEach(item => {
+      const whType = item.wh_type;
+      const status = item.status;
+      const space = Number(item.space) || 0;
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      if (!groupedData[whType]) {
+        groupedData[whType] = {
+          Occupied: 0,
+          Empty: 0
+        };
+      }
+
+      if (status === 'Occupied' || status === 'Empty') {
+        groupedData[whType][status] += space;
+      }
     });
+
+    // Get unique warehouse types
+    const types = Object.keys(groupedData);
+    setWarehouseTypes(types);
+
+    // Create processed data array
+    const processed = types.map(type => ({
+      type,
+      data: [
+        { name: 'Occupied', value: Math.round(groupedData[type].Occupied) },
+        { name: 'Empty', value: Math.round(groupedData[type].Empty) }
+      ]
+    }));
+
+    setProcessedData(processed);
+  }, [occupancyData]);
+
+  const COLORS = ['#16a34a', '#e5e7eb'];
+
+  const handlePrev = () => {
+    setCurrentTypeIndex(prev => 
+      prev === 0 ? warehouseTypes.length - 1 : prev - 1
+    );
   };
 
-  return { currentTime, formatTime };
-};
+  const handleNext = () => {
+    setCurrentTypeIndex(prev => 
+      prev === warehouseTypes.length - 1 ? 0 : prev + 1
+    );
+  };
 
-const getChartData = (occupancyData: OccupancyData[] | undefined) => {
-  if (!occupancyData) return [];
-
-  const monthlyData = occupancyData.reduce((acc, curr) => {
-    if (!acc[curr.month]) {
-      acc[curr.month] = { total: 0, count: 0 };
-    }
-    acc[curr.month].total += curr.space;
-    acc[curr.month].count += 1;
-    return acc;
-  }, {} as Record<string, { total: number; count: number }>);
-
-  return Object.entries(monthlyData).map(([month, data]) => ({
-    month,
-    occupancy: Math.round((data.total / data.count) * 100) / 100
-  }));
-};
-
-const WarehouseTypes = ['FZ AB', 'FZ BRJ', 'Bonded', 'CFS', 'PLB'];
-
-// Main Dashboard Component
-export const DashboardContent = () => {
-  const router = useRouter();
-  const { currentTime, formatTime } = useCurrentTime();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/inventory/table');
-        const jsonData = await response.json();
-        setData(jsonData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
+  if (!processedData.length) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-krnd" />
-      </div>
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle className="text-base font-medium">{title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[200px]">
+          <span className="text-muted-foreground">No occupancy data available</span>
+        </CardContent>
+      </Card>
     );
   }
 
+  const currentData = processedData[currentTypeIndex].data;
+  const total = currentData.reduce((sum, item) => sum + item.value, 0);
+  const occupiedPercentage = total ? 
+    ((currentData.find(d => d.name === 'Occupied')?.value || 0) / total * 100).toFixed(1) : 
+    0;
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Time Banner */}
-      <Card className="w-full bg-green-krnd">
-        <CardContent className="p-6">
-          <h1 className="text-4xl font-bold text-white text-center">
-            {formatTime(currentTime)}
-          </h1>
-        </CardContent>
-      </Card>
-
-      {/* Quick Links Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Inventory Preview */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => router.push('/inventory')}
-        >
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Inventory Overview</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-green-krnd" />
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={getChartData(data?.occupancySqm)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="occupancy" 
-                  stroke="#659c37" 
-                  strokeWidth={2}
-                />
-              </LineChart>
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="text-base font-medium">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center space-y-2">
+        {/* Donut chart with navigation arrows */}
+        <div className="flex items-center justify-between w-full">
+          {warehouseTypes.length > 1 && (
+            <button 
+              onClick={handlePrev}
+              className="p-2 hover:bg-gray-100 rounded"
+              aria-label="Previous warehouse type"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+          )}
+          
+          <div className="h-[200px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={currentData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="60%"
+                  outerRadius="80%"
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {currentData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                  ))}
+                  <Label
+                    value={`${occupiedPercentage}%`}
+                    position="center"
+                    fontSize={16}
+                    fill="#374151"
+                  />
+                </Pie>
+              </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Latest Occupancy Stats */}
-        <Card 
-          className="hover:shadow-lg transition-shadow cursor-pointer"
-          onClick={() => router.push('/occupancy')}
-        >
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Current Occupancy</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-green-krnd" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-500">Total SQM</p>
-              <p className="text-2xl font-bold">
-                {data?.occupancySqm?.[0]?.space || 0} m²
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Volume</p>
-              <p className="text-2xl font-bold">
-                {data?.occupancyVol?.[0]?.space || 0} m³
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          {warehouseTypes.length > 1 && (
+            <button 
+              onClick={handleNext}
+              className="p-2 hover:bg-gray-100 rounded"
+              aria-label="Next warehouse type"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          )}
+        </div>
 
-        {/* Warehouse Types */}
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Warehouse Types</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-green-krnd" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {WarehouseTypes.map((type) => (
-                <div key={type} className="flex justify-between items-center">
-                  <span>{type}</span>
-                  <span className="font-semibold">
-                    {data?.occupancySqm?.find(item => item.wh_type === type)?.space || 0} m²
-                  </span>
-                </div>
-              ))}
+        {/* Warehouse type */}
+        <div className="text-sm font-medium text-gray-600">
+          {processedData[currentTypeIndex].type}
+        </div>
+
+        {/* Space values */}
+        <div className="flex justify-center space-x-8">
+          {currentData.map((entry, index) => (
+            <div key={entry.name} className="flex flex-col items-center">
+              <div className="flex items-center space-x-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: COLORS[index] }} 
+                />
+                <span className="text-sm text-gray-600">{entry.name}:</span>
+              </div>
+              <span className="text-lg font-semibold mt-1">
+                {entry.value.toLocaleString()} m²
+              </span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
