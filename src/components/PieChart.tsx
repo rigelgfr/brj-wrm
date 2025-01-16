@@ -33,7 +33,7 @@ const customLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) =>
 export function PieChart({ data, title }: PieChartProps) {
   const chartData = [
     { name: 'Occupied', value: data.occupied, color: '#a9d18e' },
-    { name: 'Empty', value: data.empty, color: '#f7f7f7' }
+    { name: 'Empty', value: data.empty, color: '#e5e7eb' }
   ]
   
   return (

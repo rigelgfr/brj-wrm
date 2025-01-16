@@ -50,8 +50,8 @@ export default function OutboundPage() {
       </div>
       <div className="flex-1 min-h-0">
         {isLoading ? (
-          <div className="flex justify-center items-center h-full">
-            <Loading /> {/* Display a loading indicator */}
+          <div className="w-full h-[75vh] flex justify-center items-center">
+            <Loading />
           </div>
         ) : (
           <DataTable

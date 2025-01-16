@@ -1,9 +1,11 @@
+// (app)/dasboard/layout.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import Clock from '@/src/components/Clock';
-import { Card, CardContent } from "@/components/ui/card";
-import { TruckDataCard, VolumeDataCard, TruckTrendsChart, VolumeTrendsChart, OccupancyDonut } from './data';
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { TruckDataCard, VolumeDataCard, TruckTrendsChart, VolumeTrendsChart, OccupancyDonut, OccupancyVolumeChart, LatestInboundTable, LatestOutboundTable } from './data';
+import Loading from '@/src/components/ui/Loading';
 
 const DashboardLayout = () => {
     const [data, setData] = useState({ 
@@ -49,13 +51,18 @@ const DashboardLayout = () => {
 
     return (
         <div className="p-4 mx-[1em]">
-            <div className="grid md:grid-cols-4 sm:grid-cols-2 gap-6">
-                <Card className="col-span-2 shadow-none border-none">
-                    <CardContent className="flex items-center justify-between p-6">
-                        <h1 className="text-4xl font-bold text-green-600">Dashboard</h1>
+            <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-6">
+                <div className='col-span-1 md:col-span-2 flex flex-row border-b-2'>
+                    <div className='flex flex-col justify-start mr-4 items-start '>
+                        <h1 className="text-3xl font-normal text-lightgrey-krnd">Bimaruna Jaya</h1>
+                        <h1 className="text-5xl font-bold text-green-krnd">Dashboard</h1>
+                    </div>
+                    <div className='w-full h-full flex justify-end items-center'>
                         <Clock />
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
+                        
+    
 
                 <TruckDataCard currentMonth={data.currentMonth} />
                 <VolumeDataCard currentMonth={data.currentMonth} />
@@ -66,12 +73,13 @@ const DashboardLayout = () => {
                   error={error}
                   maxTrucks={maxTrucks}
                 />
-
+                
+                {/* Occupancy sqm donut chart */}
                 <div className="h-full">
                     {isLoading ? (
                         <Card className="h-full">
                             <CardContent className="flex items-center justify-center h-full">
-                                Loading...
+                                <Loading />
                             </CardContent>
                         </Card>
                     ) : error ? (
@@ -83,7 +91,35 @@ const DashboardLayout = () => {
                     ) : data.occupancy?.sqm ? (
                         <OccupancyDonut 
                             occupancyData={data.occupancy.sqm}
-                            title={`Space Occupancy (Week ${data.occupancy.sqm.period?.week || ''}, ${data.occupancy.sqm.period?.month || ''} ${data.occupancy.sqm.period?.year || ''})`}
+                            title={`SQM (${data.occupancy.sqm.period?.week || ''}, ${data.occupancy.sqm.period?.month || ''} ${data.occupancy.sqm.period?.year || ''})`}
+                        />
+                    ) : (
+                        <Card className="h-full">
+                            <CardContent className="flex items-center justify-center h-full">
+                                No occupancy data available
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+                
+                {/* Occupancy vol bar charts */}
+                <div className="h-full">
+                    {isLoading ? (
+                        <Card className="h-full">
+                            <CardContent className="flex items-center justify-center h-full">
+                                <Loading />
+                            </CardContent>
+                        </Card>
+                    ) : error ? (
+                        <Card className="h-full">
+                            <CardContent className="flex items-center justify-center h-full text-red-500">
+                                Error: {error}
+                            </CardContent>
+                        </Card>
+                    ) : data.occupancy?.volume ? (
+                        <OccupancyVolumeChart 
+                            occupancyData={data.occupancy.volume}
+                            title={`Volume (${data.occupancy.volume.period?.week || ''}, ${data.occupancy.volume.period?.month || ''} ${data.occupancy.volume.period?.year || ''})`}
                         />
                     ) : (
                         <Card className="h-full">
@@ -94,14 +130,32 @@ const DashboardLayout = () => {
                     )}
                 </div>
 
-                <div className="h-full bg-gray-100 rounded-lg p-4">Grid Item 2</div>
-
                 <VolumeTrendsChart 
                   data={data.data}
                   isLoading={isLoading}
                   error={error}
                   maxVolume={maxVolume}
                 />
+
+                <div className='grid grid-rows-2 col-span-2 gap-6'>
+                    {isLoading ? (
+                        <>
+                            <div className='w-full flex justify-center items-center'><Loading/></div>
+                            <div className='w-full flex justify-center items-center'><Loading/></div>
+                        </>
+                    ) : error ? (
+                        <>
+                            <div className='w-full flex justify-center items-center text-red-500'>Error: {error}</div>
+                            <div className='w-full flex justify-center items-center text-red-500'>Error: {error}</div>
+                        </>
+                    ) : (
+                        <>  
+                            <LatestInboundTable data={data.latestInbounds} />
+
+                            <LatestOutboundTable data={data.latestOutbounds} />
+                        </>
+                    )}
+                </div>
             </div>
         </div>
     );

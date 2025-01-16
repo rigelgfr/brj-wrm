@@ -87,7 +87,9 @@ export default function OperationsData() {
       <FilterBar onFiltersChange={handleFiltersChange} initialFilters={filters} />
       
       {isLoading ? (
-        <Loading />
+        <div className="w-full h-[50vh] flex justify-center items-center">
+                    <Loading />
+            </div>
       ) : (
         <div className="space-y-8">
           {/* Inbound Operations */}

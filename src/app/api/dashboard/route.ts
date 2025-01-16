@@ -1,3 +1,5 @@
+// api/dashboard/route.ts
+
 import { prisma } from "@/src/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -43,9 +45,12 @@ export async function GET() {
 
         // Fetch latest occupancy data (SQM)
         const latestOccupancySqm = await prisma.occupancy_sqm.findMany({
+            include: {
+                months: true, // Include related month data
+            },
             orderBy: [
                 { year: 'desc' },
-                { month: 'desc' },
+                { months: { sort: 'desc' } }, // Order by `sort` in the related `Months` table
                 { week: 'desc' }
             ],
             take: 1
@@ -60,18 +65,14 @@ export async function GET() {
             }
         });
 
-        // Calculate occupancy by status
-        const occupancySqmByStatus = occupancySqmData.reduce((acc, curr) => {
-            const status = curr.status;
-            acc[status] = (acc[status] || 0) + (curr.space || 0);
-            return acc;
-        }, {} as Record<string, number>);
-
         // Fetch latest occupancy data (Volume)
         const latestOccupancyVol = await prisma.occupancy_vol.findMany({
+            include: {
+                months: true, // Include related month data
+            },
             orderBy: [
                 { year: 'desc' },
-                { month: 'desc' },
+                { months: { sort: 'desc' } }, // Order by `sort` in the related `Months` table
                 { week: 'desc' }
             ],
             take: 1
@@ -86,12 +87,35 @@ export async function GET() {
             }
         });
 
-        // Calculate volume occupancy by status
-        const occupancyVolByStatus = occupancyVolData.reduce((acc, curr) => {
-            const status = curr.status;
-            acc[status] = (acc[status] || 0) + (curr.space || 0);
-            return acc;
-        }, {} as Record<string, number>);
+        // Fetch latest inbound records
+        const latestInbounds = await prisma.inbound.findMany({
+            select: {
+                no: true,
+                area: true,
+                inbound_date: true,
+                customer_name: true,
+                volume: true
+            },
+            orderBy: {
+                no: 'desc'
+            },
+            take: 3
+        });
+
+        // Fetch latest outbound records
+        const latestOutbounds = await prisma.outbound.findMany({
+            select: {
+                no: true,
+                area: true,
+                outbound_date: true,
+                customer_name: true,
+                volume: true
+            },
+            orderBy: {
+                no: 'desc'
+            },
+            take: 3
+        });
 
         // Combine and format the data
         const formattedResult = last6Months.map(month => {
@@ -107,7 +131,7 @@ export async function GET() {
             };
         });
 
-        // Format occupancy data for pie charts
+        // Format occupancy data, sqm with pie charts, vol with bars
         const occupancyData = {
             sqm: {
                 period: {
@@ -127,10 +151,12 @@ export async function GET() {
                     month: latestOccupancyVol[0]?.month,
                     week: latestOccupancyVol[0]?.week
                 },
-                data: [
-                    { name: 'Occupied', value: occupancyVolByStatus['Occupied'] || 0 },
-                    { name: 'Empty', value: occupancyVolByStatus['Empty'] || 0 }
-                ]
+                data: occupancyVolData.map(record => ({
+                    wh_type: record.wh_type,
+                    status: record.status,
+                    space: record.space
+                }))
+                
             }
         };
 
@@ -139,10 +165,12 @@ export async function GET() {
             currentMonth: {
                 inboundTrucks: formattedResult[5]?.inboundTrucks || 0,
                 outboundTrucks: formattedResult[5]?.outboundTrucks || 0,
-                inboundVolume: Math.round(formattedResult[4]?.inboundVolume || 0),
-                outboundVolume: Math.round(formattedResult[4]?.outboundVolume || 0),
+                inboundVolume: Math.round(formattedResult[5]?.inboundVolume || 0),
+                outboundVolume: Math.round(formattedResult[5]?.outboundVolume || 0),
             },
-            occupancy: occupancyData
+            occupancy: occupancyData,
+            latestInbounds,
+            latestOutbounds
         });
     } catch (error) {
         console.error("[DASHBOARD_GET]", error);

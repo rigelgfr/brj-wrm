@@ -48,21 +48,21 @@ export default function InboundPage() {
       <div className="flex-none">
         <p className="text-xl font-bold text-green-krnd">Inbound</p>
       </div>
-      <div className="flex-1 min-h-0">
         {isLoading ? (
-          <div className="flex justify-center items-center h-full">
-            <Loading /> {/* Display a loading indicator */}
+          <div className="w-full h-[75vh] flex justify-center items-center">
+            <Loading />
           </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={data}
-            onRefresh={handleRefresh}
-            filters={inboundOutboundFilters}
-            isInbound={true}
-          />
+          ) : (
+          <div className="flex-1 min-h-0">
+            <DataTable
+              columns={columns}
+              data={data}
+              onRefresh={handleRefresh}
+              filters={inboundOutboundFilters}
+              isInbound={true}
+            />
+          </div>
         )}
-      </div>
     </div>
   );
 }

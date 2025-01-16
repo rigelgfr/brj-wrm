@@ -32,7 +32,7 @@ const Clock = () => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="font-semibold text-lightgrey-krnd text-right w-full">
+      <div className="font-normal text-lightgrey-krnd text-right w-full">
         {formattedDate} - {getWeekNumber(time)}
       </div>
       <div className="flex items-baseline justify-end w-full">

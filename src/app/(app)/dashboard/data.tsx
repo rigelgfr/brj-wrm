@@ -1,9 +1,20 @@
+// (app)/dasboard/data.tsx
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Label } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Truck, Box, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import Loading from '@/src/components/ui/Loading';
 
 export const TruckDataCard = ({ currentMonth }) => (
   <Card onClick={() => { console.log("Clicked") }}>
@@ -59,7 +70,7 @@ export const TruckTrendsChart = ({ data, isLoading, error, maxTrucks }) => (
     <CardContent>
       {isLoading ? (
         <div className="h-[300px] flex items-center justify-center">
-          Loading...
+          <Loading />
         </div>
       ) : error ? (
         <div className="h-[300px] flex items-center justify-center text-red-500">
@@ -106,7 +117,7 @@ export const VolumeTrendsChart = ({ data, isLoading, error, maxVolume }) => (
     <CardContent>
       {isLoading ? (
         <div className="h-[300px] flex items-center justify-center">
-          Loading...
+          <Loading />
         </div>
       ) : error ? (
         <div className="h-[300px] flex items-center justify-center text-red-500">
@@ -191,7 +202,7 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
     setProcessedData(processed);
   }, [occupancyData]);
 
-  const COLORS = ['#16a34a', '#e5e7eb'];
+  const COLORS = ['#a9d18e', '#e5e7eb'];
 
   const handlePrev = () => {
     setCurrentTypeIndex(prev => 
@@ -209,7 +220,7 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
     return (
       <Card className="h-full">
         <CardHeader>
-          <CardTitle className="text-base font-medium">{title}</CardTitle>
+          <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[200px]">
           <span className="text-muted-foreground">No occupancy data available</span>
@@ -227,7 +238,7 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-base font-medium">{title}</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center space-y-2">
         {/* Donut chart with navigation arrows */}
@@ -250,7 +261,7 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
                   cx="50%"
                   cy="50%"
                   innerRadius="60%"
-                  outerRadius="80%"
+                  outerRadius= "90%"
                   paddingAngle={2}
                   dataKey="value"
                 >
@@ -303,5 +314,159 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+export const OccupancyVolumeChart = ({ occupancyData, title }) => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    if (!occupancyData?.data || !Array.isArray(occupancyData.data)) return;
+
+    // Group and process the data
+    const processedData = Object.values(
+      occupancyData.data.reduce((acc, item) => {
+        const whType = item.wh_type;
+        if (!acc[whType]) {
+          acc[whType] = {
+            name: whType,
+            total: 0,
+            occupied: 0,
+            empty: 0
+          };
+        }
+        
+        const value = Number(item.space) || 0;
+        acc[whType].total += value;
+        if (item.status === 'Occupied') acc[whType].occupied += value;
+        if (item.status === 'Empty') acc[whType].empty += value;
+        
+        return acc;
+      }, {})
+    ).map(item => ({
+      name: item.name,
+      Occupied: item.occupied,
+      Empty: item.empty,
+      percentage: ((item.occupied / item.total) * 100).toFixed(1)
+    }));
+
+    setData(processedData);
+  }, [occupancyData]);
+
+  if (!data.length) {
+    return (
+      <Card className="h-full">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[200px]">
+          <span className="text-muted-foreground">No data available</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-5">
+          {data.map((item) => (
+            <div key={item.name} className="space-y-2">
+              <div className='grid grid-cols-4 items-end'>
+                <div className="text-sm font-medium text-darkgrey-krnd">{item.name}</div>
+                <div className='flex text-xs col-span-2 justify-center'>
+                  {Math.round(item.Occupied).toLocaleString()} m³ / {Math.round(item.Empty).toLocaleString()} m³
+                </div>
+                <div className='text-xs flex justify-end'>
+                  {item.percentage}%
+                </div>
+              </div>
+              
+              <div className="w-full h-4 bg-[#e5e7eb] rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[#a9d18e] transition-all duration-300"
+                  style={{ width: `${item.percentage}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const LatestInboundTable = ({ data }) => {
+  if (!data || data.length === 0) {
+      return <div className="text-center py-4">No inbound data available</div>;
+  }
+
+  return (
+      <div className="rounded-xl border shadow-sm">
+          <CardHeader className='h-4'>
+            <CardTitle className=''>Latest Inbound Data</CardTitle>
+          </CardHeader>
+          <Table>
+              <TableHeader>
+                  <TableRow>
+                      <TableHead>No</TableHead>
+                      <TableHead>Area</TableHead>
+                      <TableHead>Inbound Date</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead className="text-right">Volume</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {data.map((item) => (
+                      <TableRow key={item.no} className=''>
+                          <TableCell>{item.no}</TableCell>
+                          <TableCell>{item.area}</TableCell>
+                          <TableCell>{new Date(item.inbound_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{item.customer_name}</TableCell>
+                          <TableCell className="text-right">{item.volume}</TableCell>
+                      </TableRow>
+                  ))}
+              </TableBody>
+          </Table>
+      </div>
+  );
+};
+
+export const LatestOutboundTable = ({ data }) => {
+  if (!data || data.length === 0) {
+      return <div className="text-center py-4">No outbound data available</div>;
+  }
+
+  return (
+      <div className="rounded-xl border shadow-sm">
+        <CardHeader className='h-4'>
+            <CardTitle className=''>Latest Outbound Data</CardTitle>
+          </CardHeader>
+          <Table>
+              <TableHeader>
+                  <TableRow>
+                      <TableHead>No</TableHead>
+                      <TableHead>Area</TableHead>
+                      <TableHead>Outbound Date</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead className="text-right">Volume</TableHead>
+                  </TableRow>
+              </TableHeader>
+              <TableBody>
+                  {data.map((item) => (
+                      <TableRow key={item.no}>
+                          <TableCell>{item.no}</TableCell>
+                          <TableCell>{item.area}</TableCell>
+                          <TableCell>{new Date(item.outbound_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{item.customer_name}</TableCell>
+                          <TableCell className="text-right">{item.volume}</TableCell>
+                      </TableRow>
+                  ))}
+              </TableBody>
+          </Table>
+      </div>
   );
 };
