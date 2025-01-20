@@ -3,8 +3,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, LabelList, CartesianGrid, Tooltip, ResponsiveContainer, Legend, YAxis } from 'recharts';
 
+interface WarehouseData {
+  warehouse: string;
+  [key: string]: string | number; // For dynamic week keys like 'W1', 'W2', etc.
+}
+
 interface GroupedBarChartProps {
-  data: any[];
+  data: WarehouseData[];
   weeks: string[];
   title: string;
 }
@@ -12,7 +17,7 @@ interface GroupedBarChartProps {
 const COLORS = ['#94d454', '#54cccc', '#fcc404', '#acd48c', '#e3cb8c'];
 
 // Helper function to sort weeks
-const sortWeeks = (weeks: string[]) => {
+const sortWeeks = (weeks: string[]): string[] => {
   return [...weeks].sort((a, b) => {
     const weekA = parseInt(a.slice(1));
     const weekB = parseInt(b.slice(1));
@@ -21,15 +26,17 @@ const sortWeeks = (weeks: string[]) => {
 };
 
 // Helper function to sort warehouses alphabetically
-const sortWarehouses = (data: any[]) => {
+const sortWarehouses = (data: WarehouseData[]): WarehouseData[] => {
   return [...data].sort((a, b) => a.warehouse.localeCompare(b.warehouse));
 };
 
 // Helper function to calculate max value
-const calculateMaxValue = (data: any[], weeks: string[]) => {
-  const maxValue = Math.max(...data.flatMap(entry => weeks.map(week => entry[week] || 0)));
-  return maxValue * 1.1; // Add 10% padding;
-}
+const calculateMaxValue = (data: WarehouseData[], weeks: string[]): number => {
+  const maxValue = Math.max(...data.flatMap(entry => 
+    weeks.map(week => (typeof entry[week] === 'number' ? entry[week] : 0) as number)
+  ));
+  return maxValue * 1.1; // Add 10% padding
+};
 
 const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
   const sortedWeeks = sortWeeks(weeks);

@@ -1,14 +1,6 @@
 // app/api/inventory/add/route.ts
 import { NextResponse } from 'next/server';
-import { prisma } from '@/src/lib/prisma';
-
-type OccupancyInput = {
-  year: number;
-  month: string;
-  week: string;
-  wh_type: string;
-  space: number;
-};
+import { prisma } from '@/lib/prisma';
 
 function getLastDayOfMonth(year: number, month: string): Date {
   const monthIndex = [
@@ -18,16 +10,7 @@ function getLastDayOfMonth(year: number, month: string): Date {
   return new Date(year, monthIndex + 1, 0);
 }
 
-function getFirstDayOfMonth(year: number, month: string): Date {
-  const monthIndex = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ].indexOf(month);
-  return new Date(year, monthIndex, 1);
-}
-
 function calculateWeekNumber(date: Date): string {
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
   const lastDayPrevMonth = new Date(date.getFullYear(), date.getMonth(), 0);
   
   const weekNum = Math.ceil((date.getDate() + lastDayPrevMonth.getDay()) / 7);
@@ -65,7 +48,7 @@ export async function POST(request: Request) {
     });
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // Process SQM data
       for (const data of sqmData) {
         const { year, month, week, wh_type, space } = data;

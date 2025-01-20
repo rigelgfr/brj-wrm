@@ -1,5 +1,7 @@
+'use client'
+
 import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
-import { Button } from '@/src/components/ui/Button';
+import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -55,7 +57,7 @@ export default function SlidingMenu({ open, onOpenChange, session }: SlidingMenu
       <SheetTrigger></SheetTrigger>
       <SheetContent
         side="right"
-        className='w-[300px] fixed inset-y-0 right-0 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right'
+        className='w-[300px]'
       >
         <SheetHeader className="mb-6">
           <SheetTitle>{session.user?.name}</SheetTitle>

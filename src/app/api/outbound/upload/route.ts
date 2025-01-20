@@ -1,8 +1,101 @@
 // api/inbound/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'csv-parse';
-import { prisma } from '@/src/lib/prisma';
-import { updateOutboundAggregates } from '../../operation_out/update/route';
+import { prisma } from '@/lib/prisma';
+import { updateOutboundAggregates } from '../../operation_out/update/utils';
+
+// Define interfaces for the CSV row and processed data
+interface CSVRow {
+  'NO': string;
+  'WH NAME': string;
+  'AREA': string;
+  'OUTBOUND DOC TYPE': string;
+  'OUTBOUND DOC': string;
+  'PICKING DOC': string;
+  'LOADING DOC': string;
+  'CUSTOMER NAME': string;
+  'SHIPPER NAME': string;
+  'ITEM CODE': string;
+  'ITEM NAME': string;
+  'UOM': string;
+  'BATCH': string;
+  'BL/DO': string;
+  'AJU NO': string;
+  'TRUCK TYPE': string;
+  'TRUCK NO': string;
+  'CONTAINER NO': string;
+  'SEAL NO': string;
+  'VESSEL NAME': string;
+  'VOYAGE NO': string;
+  'DESTINATION': string;
+  'RECIPIENT': string;
+  'SHIPPING NOTES': string;
+  'REMARK': string;
+  'DOC STATUS': string;
+  'USER ADMIN': string;
+  'USER PICKING': string;
+  'USER LOADING': string;
+  'DOC QTY': string;
+  'QTY': string;
+  'NETT WEIGHT': string;
+  'GROSS WEIGHT': string;
+  'VOLUME': string;
+  'OUTBOUND DATE': string;
+  'LOADING DATE': string;
+  'OUTBOUND_TIME': string;
+  'START PICKING': string;
+  'FINISH PICKING': string;
+  'START LOADING': string;
+  'FINISH LOADING': string;
+}
+
+interface ProcessedData {
+  no: number;
+  wh_name: string;
+  warehouses: {
+    connect: {
+      wh_name: string;
+    };
+  };
+  outbound_doc_type: string;
+  outbound_doc: string;
+  picking_doc: string;
+  loading_doc: string;
+  customer_name: string;
+  shipper_name: string;
+  item_code: string;
+  item_name: string;
+  uom: string;
+  batch: string;
+  bl_do: string;
+  aju_no: string;
+  truck_type: string;
+  truck_no: string;
+  container_no: string;
+  seal_no: string;
+  vessel_name: string;
+  voyage_no: string;
+  destination: string;
+  recipient: string;
+  shipping_notes: string;
+  remark: string;
+  doc_status: string;
+  user_admin: string;
+  user_picking: string;
+  user_loading: string;
+  doc_qty: number;
+  qty: number;
+  nett_weight: number;
+  gross_weight: number;
+  volume: number;
+  outbound_date: Date;
+  loading_date: Date;
+  outbound_time: Date;
+  start_picking: Date;
+  finish_picking: Date;
+  start_loading: Date;
+  finish_loading: Date;
+}
 
 // Helper function to convert string to number with comma handling
 const processNumeric = (value: string | null | undefined): number => {
@@ -85,7 +178,7 @@ const processTimestamp = (timestampStr: string | null | undefined): Date => {
   }
 };
 
-const processCSVData = (csvData: any[]) => {
+const processCSVData = (csvData: CSVRow[]): ProcessedData[] => {
   return csvData
     // Filter out rows with empty AREA
     .filter(row => row['AREA'] && row['AREA'].trim() !== '')
@@ -152,7 +245,12 @@ const processCSVData = (csvData: any[]) => {
     }));
 };
 
-export async function POST(request: NextRequest) {
+interface APIResponse {
+  message: string;
+  recordCount: number;
+}
+
+export async function POST(request: NextRequest): Promise<NextResponse<APIResponse | string>> { 
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -165,7 +263,7 @@ export async function POST(request: NextRequest) {
     const fileBuffer = await file.arrayBuffer();
     const fileContent = new TextDecoder().decode(fileBuffer);
     
-    const records: any[] = [];
+    const records: CSVRow[] = [];
     const parser = parse(fileContent, {
       columns: true,
       skip_empty_lines: true,

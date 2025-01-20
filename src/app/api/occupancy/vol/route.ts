@@ -1,5 +1,5 @@
 // app/api/occupancy_vol/route.ts
-import { prisma } from "@/src/lib/prisma"
+import { prisma } from "@/lib/prisma"
 
 const monthMap: Record<string, string> = {
   'January': 'Jan',

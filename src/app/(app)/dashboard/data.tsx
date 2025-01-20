@@ -14,9 +14,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Loading from '@/src/components/ui/Loading';
+import Loading from '@/components/ui/Loading';
+import { 
+  TruckDataCardProps,  
+  VolumeDataCardProps,
+  TrendChartProps,
+  VolumeTrendChartProps,
+  OccupancyDonutProps,
+  OccupancyVolumeChartProps,
+  LatestInboundTableProps,
+  LatestOutboundTableProps,
+  GroupedData,
+  VolumeAccumulator,
+} from './types';
 
-export const TruckDataCard = ({ currentMonth }) => (
+export const TruckDataCard: React.FC<TruckDataCardProps> = ({ currentMonth }) => (
   <Card onClick={() => { console.log("Clicked") }}>
     <CardContent className="p-6">
       <div className="flex flex-col space-y-2">
@@ -39,7 +51,7 @@ export const TruckDataCard = ({ currentMonth }) => (
   </Card>
 );
 
-export const VolumeDataCard = ({ currentMonth }) => (
+export const VolumeDataCard: React.FC<VolumeDataCardProps> = ({ currentMonth }) => (
   <Card>
     <CardContent className="p-6">
       <div className="flex flex-col space-y-2">
@@ -62,7 +74,7 @@ export const VolumeDataCard = ({ currentMonth }) => (
   </Card>
 );
 
-export const TruckTrendsChart = ({ data, isLoading, error, maxTrucks }) => (
+export const TruckTrendsChart: React.FC<TrendChartProps> = ({ data, isLoading, error, maxTrucks }) => (
   <Card className="col-span-2">
     <CardHeader>
       <CardTitle>Monthly Truck Trends</CardTitle>
@@ -109,7 +121,7 @@ export const TruckTrendsChart = ({ data, isLoading, error, maxTrucks }) => (
   </Card>
 );
 
-export const VolumeTrendsChart = ({ data, isLoading, error, maxVolume }) => (
+export const VolumeTrendsChart: React.FC<VolumeTrendChartProps> = ({ data, isLoading, error, maxVolume }) => (
   <Card className="col-span-2">
     <CardHeader>
       <CardTitle>Monthly Volume Trends</CardTitle>
@@ -156,10 +168,13 @@ export const VolumeTrendsChart = ({ data, isLoading, error, maxVolume }) => (
   </Card>
 );
 
-export const OccupancyDonut = ({ occupancyData, title }) => {
-  const [warehouseTypes, setWarehouseTypes] = useState([]);
-  const [currentTypeIndex, setCurrentTypeIndex] = useState(0);
-  const [processedData, setProcessedData] = useState([]);
+export const OccupancyDonut: React.FC<OccupancyDonutProps> = ({ occupancyData, title }) => {
+  const [warehouseTypes, setWarehouseTypes] = useState<string[]>([]);
+  const [currentTypeIndex, setCurrentTypeIndex] = useState<number>(0);
+  const [processedData, setProcessedData] = useState<Array<{
+    type: string;
+    data: Array<{ name: string; value: number }>;
+  }>>([]);
 
   useEffect(() => {
     if (!occupancyData?.data || !Array.isArray(occupancyData.data)) {
@@ -167,7 +182,7 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
     }
 
     // Group data by warehouse type
-    const groupedData = {};
+    const groupedData: GroupedData = {};
     
     occupancyData.data.forEach(item => {
       const whType = item.wh_type;
@@ -317,15 +332,20 @@ export const OccupancyDonut = ({ occupancyData, title }) => {
   );
 };
 
-export const OccupancyVolumeChart = ({ occupancyData, title }) => {
-  const [data, setData] = useState([]);
+export const OccupancyVolumeChart: React.FC<OccupancyVolumeChartProps> = ({ occupancyData, title }) => {
+  const [data, setData] = useState<Array<{
+    name: string;
+    Occupied: number,
+    Empty: number,
+    percentage: string,
+  }>>([]);
 
   useEffect(() => {
     if (!occupancyData?.data || !Array.isArray(occupancyData.data)) return;
 
     // Group and process the data
     const processedData = Object.values(
-      occupancyData.data.reduce((acc, item) => {
+      occupancyData.data.reduce<VolumeAccumulator>((acc, item) => {
         const whType = item.wh_type;
         if (!acc[whType]) {
           acc[whType] = {
@@ -399,7 +419,7 @@ export const OccupancyVolumeChart = ({ occupancyData, title }) => {
   );
 };
 
-export const LatestInboundTable = ({ data }) => {
+export const LatestInboundTable: React.FC<LatestInboundTableProps> = ({ data }) => {
   if (!data || data.length === 0) {
       return <div className="text-center py-4">No inbound data available</div>;
   }
@@ -435,7 +455,7 @@ export const LatestInboundTable = ({ data }) => {
   );
 };
 
-export const LatestOutboundTable = ({ data }) => {
+export const LatestOutboundTable: React.FC<LatestOutboundTableProps> = ({ data }) => {
   if (!data || data.length === 0) {
       return <div className="text-center py-4">No outbound data available</div>;
   }

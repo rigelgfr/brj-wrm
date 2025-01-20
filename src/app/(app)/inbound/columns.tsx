@@ -1,18 +1,19 @@
+// inbound/columns.tsx
 "use client";
 import { useState } from "react";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row, Table } from "@tanstack/react-table";
 import { MoreHorizontal, StickyNote, ArrowUpDown } from "lucide-react";
 
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import EditDialog from "@/src/components/EditDialog";
-import ConfirmDialog from "@/src/components/ui/ConfirmDialog";
+import EditDialog from "@/components/EditDialog";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 // Define the shape of the inbound data
 export type Inbound = {
@@ -60,7 +61,164 @@ export type Inbound = {
   week_in_month: string;
 };
 
-export const columns: ColumnDef<Inbound>[] = [
+// Define the meta type for columns
+interface ColumnMetaType {
+  onRefresh?: () => void;
+}
+
+// Add this type to extend the base ColumnDef type
+type ColumnDefWithMeta<T> = ColumnDef<T> & {
+  meta?: ColumnMetaType;
+};
+
+interface ActionCellProps {
+  row: Row<Inbound>;
+  table: Table<Inbound>;
+}
+
+// Create a separate component for the actions cell
+const ActionCell = ({ row, table }: ActionCellProps) => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const handleSubmit = async (data: Partial<Inbound>, identifier: string | Date | number | null) => {
+    try {
+      if (typeof identifier !== 'number') {
+        throw new Error('Invalid identifier type');
+      }
+
+      const response = await fetch(`/api/inbound/edit`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          no: identifier,
+          ...data
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update record');
+      }
+
+      if (table.options.meta?.onRefresh) {
+        table.options.meta.onRefresh();
+      }
+
+    } catch (error) {
+      console.error('Failed to update:', error);
+      throw error;
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/inbound/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          no: row.original.no
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete record');
+      }
+
+      setShowDeleteDialog(false);
+
+      if (table.options.meta?.onRefresh) {
+        table.options.meta.onRefresh();
+      }
+
+    } catch (error) {
+      console.error('Failed to delete:', error);
+    }
+  };
+
+  // Specify which columns should be editable
+  const editableColumns = [
+    "area",
+    "inbound_date",
+    "inbound_doc_type",
+    "inbound_doc",
+    "receiving_doc",
+    "customer_name",
+    "shipper_name",
+    "item_code",
+    "item_name",
+    "qty",
+    "uom",
+    "nett_weight",
+    "gross_weight",
+    "volume",
+    "batch",
+    "npe_no",
+    "npe_date",
+    "peb_no",
+    "peb_date",
+    "bl_do",
+    "aju_no",
+    "truck_type",
+    "plat_no",
+    "container_no",
+    "remark",
+    "dock_no",
+    "doc_status",
+    "user_admin",
+    "user_tally",
+    "user_putaway"
+  ];
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="text-red-600 hover:bg-gray-200"
+            onClick={() => setShowDeleteDialog(true)}>
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditDialog
+        row={row.original}
+        columns={columns}
+        editableColumns={editableColumns}
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        onSubmit={handleSubmit}
+        primaryKeyField="no"
+      />
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onContinue={handleDelete}
+        title="Delete Record"
+        description="Are you sure you want to delete this record? This action is irreversible."
+        cancelText="No, Cancel"
+        continueText="Yes, Delete"
+        variant="destructive"
+      />
+    </>
+  );
+};
+
+export const columns: ColumnDefWithMeta<Inbound>[] = [
     {
       accessorKey: "no",
       header: ({ column }) => {
@@ -119,12 +277,20 @@ export const columns: ColumnDef<Inbound>[] = [
       
         try {
           // Ensure the value is a Date object
-          const dateObject = new Date(timeValue);
-      
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+          if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
+            const dateObject = new Date(timeValue)
+
+            if (isNaN(dateObject.getTime())) {
+              return <div>Invalid time</div>
+            }
+
+             // Extract hh:mm using built-in methods
+            const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
+            return <div className="text-right">{formattedTime}</div>;
+          }
+
+          // If timeValue is of an unsupported type
+          return <div>Invalid Time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Time</div>;
@@ -273,11 +439,14 @@ export const columns: ColumnDef<Inbound>[] = [
         }
     
         try {
-          // Ensure the value is a Date object
-          const dateObject = new Date(timeValue);
-    
-          // Format as yyyy-mm-dd hh:mm:ss
-          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+          if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
+            const dateObject = new Date(timeValue)
+
+            if (isNaN(dateObject.getTime())) {
+              return <div>Invalid time</div>
+            }
+
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
             .toString()
             .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
             .getHours()
@@ -287,7 +456,11 @@ export const columns: ColumnDef<Inbound>[] = [
             .toString()
             .padStart(2, "0")}`;
     
-          return <div className="text-right">{formattedDateTime}</div>;
+            return <div className="text-right">{formattedDateTime}</div>;
+          }
+
+          // If timeValue is of an unsupported type
+          return <div>Invalid Time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Date/Time</div>;
@@ -306,10 +479,14 @@ export const columns: ColumnDef<Inbound>[] = [
         }
     
         try {
-          // Ensure the value is a Date object
-          const dateObject = new Date(timeValue);
-    
-          // Format as yyyy-mm-dd hh:mm:ss
+          if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
+            const dateObject = new Date(timeValue)
+
+            if (isNaN(dateObject.getTime())) {
+              return <div>Invalid time</div>
+            }
+            
+            // Format as yyyy-mm-dd hh:mm:ss
           const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
             .toString()
             .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
@@ -320,7 +497,10 @@ export const columns: ColumnDef<Inbound>[] = [
             .toString()
             .padStart(2, "0")}`;
     
-          return <div className="text-right">{formattedDateTime}</div>;
+            return <div className="text-right">{formattedDateTime}</div>;
+          }
+
+          return <div>Invalid time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Date/Time</div>;
@@ -343,11 +523,15 @@ export const columns: ColumnDef<Inbound>[] = [
         }
     
         try {
-          // Ensure the value is a Date object
-          const dateObject = new Date(timeValue);
-    
-          // Format as yyyy-mm-dd hh:mm:ss
-          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+          if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
+            const dateObject = new Date(timeValue)
+
+            if (isNaN(dateObject.getTime())) {
+              return <div>Invalid time</div>
+            }
+
+            // Format as yyyy-mm-dd hh:mm:ss
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
             .toString()
             .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
             .getHours()
@@ -357,7 +541,10 @@ export const columns: ColumnDef<Inbound>[] = [
             .toString()
             .padStart(2, "0")}`;
     
-          return <div className="text-right">{formattedDateTime}</div>;
+            return <div className="text-right">{formattedDateTime}</div>;
+          }
+          
+          return <div>Invalid time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Date/Time</div>;
@@ -376,21 +563,28 @@ export const columns: ColumnDef<Inbound>[] = [
         }
     
         try {
-          // Ensure the value is a Date object
-          const dateObject = new Date(timeValue);
+          if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
+            const dateObject = new Date(timeValue)
+
+            if (isNaN(dateObject.getTime())) {
+              return <div>Invalid time</div>
+            }
+
+            // Format as yyyy-mm-dd hh:mm:ss
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+              .toString()
+              .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+              .getHours()
+              .toString()
+              .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+              .getSeconds()
+              .toString()
+              .padStart(2, "0")}`;
+      
+            return <div className="text-right">{formattedDateTime}</div>;
+          }
     
-          // Format as yyyy-mm-dd hh:mm:ss
-          const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
-            .toString()
-            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
-            .getHours()
-            .toString()
-            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
-            .getSeconds()
-            .toString()
-            .padStart(2, "0")}`;
-    
-          return <div className="text-right">{formattedDateTime}</div>;
+          return <div>Invalid time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Date/Time</div>;
@@ -431,146 +625,8 @@ export const columns: ColumnDef<Inbound>[] = [
           <StickyNote className="h-5 w-5 mx-auto" /> {/* The icon with styling */}
         </div>
       ),
-      cell: ({ row, column }) => {
-        const [showEditDialog, setShowEditDialog] = useState(false);
-        const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-        const onRefresh = column.columnDef.meta?.onRefresh;
-
-        const handleSubmit = async (data: Partial<Inbound>, no: number) => {
-          try {
-            const response = await fetch(`/api/inbound/edit`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                no, // Use the 'no' field as identifier
-                ...data
-              }),
-            });
-      
-            if (!response.ok) {
-              throw new Error('Failed to update record');
-            }
-
-             // Call onRefresh after successful update
-            if (onRefresh) {
-              onRefresh();
-            }
-      
-          } catch (error) {
-            console.error('Failed to update:', error);
-            throw error;
-          }
-        };
-
-        const handleDelete = async () => {
-          try {
-            const response = await fetch(`/api/inbound/delete`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                no: row.original.no
-              }),
-            });
-        
-            if (!response.ok) {
-              throw new Error('Failed to delete record');
-            }
-        
-            // Close the delete dialog
-            setShowDeleteDialog(false);
-        
-            // Refresh the table
-            if (onRefresh) {
-              onRefresh();
-            }
-        
-          } catch (error) {
-            console.error('Failed to delete:', error);
-          }
-        };
-        
-        // Specify which columns should be editable
-        const editableColumns = [
-          "area",
-          "inbound_date",
-          "inbound_doc_type",
-          "inbound_doc",
-          "receiving_doc",
-          "customer_name",
-          "shipper_name",
-          "item_code",
-          "item_name",
-          "qty",
-          "uom",
-          "nett_weight",
-          "gross_weight",
-          "volume",
-          "batch",
-          "npe_no",
-          "npe_date",
-          "peb_no",
-          "peb_date",
-          "bl_do",
-          "aju_no",
-          "truck_type",
-          "plat_no",
-          "container_no",
-          "remark",
-          "dock_no",
-          "doc_status",
-          "user_admin",
-          "user_tally",
-          "user_putaway"
-        ];
-    
-        return (
-          <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="text-red-600 hover:bg-gray-200"
-                  onClick={() => setShowDeleteDialog(true)}>
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-    
-            <EditDialog
-              row={row.original}
-              columns={columns}
-              editableColumns={editableColumns}
-              isOpen={showEditDialog}
-              onClose={() => setShowEditDialog(false)}
-              onSubmit={handleSubmit}
-              primaryKeyField="no"
-            />
-
-            <ConfirmDialog
-              open={showDeleteDialog}
-              onOpenChange={setShowDeleteDialog}
-              onContinue={handleDelete}
-              title="Delete Record"
-              description="Are you sure you want to delete this record? This action is irreversible."
-              cancelText="No, Cancel"
-              continueText="Yes, Delete"
-              variant="destructive"
-            />
-          </>
-        );
-      },
+      cell: ({ row, table }) => (
+        <ActionCell row={row} table={table} />
+      ),
     }
   ];

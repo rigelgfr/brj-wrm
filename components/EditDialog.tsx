@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -20,17 +20,24 @@ import {
 } from "@/components/ui/select";
 import ConfirmDialog from './ui/ConfirmDialog';
 
-interface EditDialogProps<TData> {
+type ColumnValue = string | number | Date | null;
+
+interface AreaOption {
+  value: string;
+  label: string;
+}
+
+interface EditDialogProps<TData extends Record<string, ColumnValue>> {
   row: TData;
-  columns: ColumnDef<TData, any>[];
+  columns: ColumnDef<TData, unknown>[];
   editableColumns: string[];
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Partial<TData>, identifier: any) => Promise<void>;
+  onSubmit: (data: Partial<TData>, identifier: TData[keyof TData]) => Promise<void>;
   primaryKeyField: keyof TData;
 }
 
-const AREA_OPTIONS = [
+const AREA_OPTIONS: AreaOption[] = [
   { value: "CFS", label: "CFS" },
   { value: "FREEZONE AB", label: "FREEZONE AB" },
   { value: "FREEZONE BRJ", label: "FREEZONE BRJ" },
@@ -38,7 +45,7 @@ const AREA_OPTIONS = [
   { value: "PLB", label: "PLB" },
 ];
 
-const EditDialog = <TData,>({
+const EditDialog = <TData extends Record<string, ColumnValue>>({
   row,
   columns,
   editableColumns,
@@ -50,7 +57,11 @@ const EditDialog = <TData,>({
   const [formData, setFormData] = useState<Partial<TData>>(() => {
     const initialData: Partial<TData> = {};
     editableColumns.forEach(key => {
-      initialData[key as keyof TData] = row[key as keyof TData];
+      const value = row[key as keyof TData];
+      // Only assign the value if it exists, otherwise leave it undefined
+      if (value !== null && value !== undefined) {
+        initialData[key as keyof TData] = value;
+      }
     });
     return initialData;
   });
@@ -58,11 +69,18 @@ const EditDialog = <TData,>({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
 
-  const handleInputChange = (key: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  const handleInputChange = (key: string, value: ColumnValue) => {
+    if (value === '') {
+      // If empty string, remove the key from formData
+      const newFormData = { ...formData };
+      delete newFormData[key as keyof TData];
+      setFormData(newFormData);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [key]: value
+      }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -72,7 +90,7 @@ const EditDialog = <TData,>({
   const handleConfirmedSubmit = async () => {
     try {
       setIsSubmitting(true);
-      await onSubmit(formData, row[primaryKeyField]); // Call the passed down onSubmit function
+      await onSubmit(formData, row[primaryKeyField]);
       onClose();
     } catch (error) {
       console.error('Submit error:', error);
@@ -85,44 +103,50 @@ const EditDialog = <TData,>({
   const handleCancel = () => {
     const initialData: Partial<TData> = {};
     editableColumns.forEach(key => {
-      initialData[key as keyof TData] = row[key as keyof TData];
+      const value = row[key as keyof TData];
+      if (value !== null && value !== undefined) {
+        initialData[key as keyof TData] = value;
+      }
     });
     setFormData(initialData);
     onClose();
   };
 
   const getDateType = (columnName: string): 'date' | 'time' | 'datetime' | null => {
-    if (columnName.includes('_date')) {
-      return 'date';
-    }
-    if (columnName === 'gate_in' || columnName === 'outbound_time') {
-      return 'time';
-    }
-    if (columnName.includes('start_') || columnName.includes('finish_')) {
-      return 'datetime';
-    }
+    if (columnName.includes('_date')) return 'date';
+    if (columnName === 'gate_in' || columnName === 'outbound_time') return 'time';
+    if (columnName.includes('start_') || columnName.includes('finish_')) return 'datetime';
     return null;
   };
 
-  const formatValue = (value: any, dateType: 'date' | 'time' | 'datetime' | null): string => {
-    if (!value) return '';
+  const formatValue = (value: ColumnValue, dateType: 'date' | 'time' | 'datetime' | null): string => {
+    if (value === null || value === undefined) return '';
 
     try {
-      const date = new Date(value);
-      
-      switch (dateType) {
-        case 'date':
-          return date.toISOString().split('T')[0];
-        case 'time':
-          return date.toTimeString().slice(0, 5);
-        case 'datetime':
-          return `${date.toISOString().split('.')[0].slice(0, -3)}`;
-        default:
-          return value?.toString() || '';
+      if (value instanceof Date) {
+        switch (dateType) {
+          case 'date':
+            return value.toISOString().split('T')[0];
+          case 'time':
+            return value.toTimeString().slice(0, 5);
+          case 'datetime':
+            return value.toISOString().slice(0, -8); // Remove seconds and timezone
+          default:
+            return value.toString();
+        }
       }
+      
+      if (typeof value === 'string' && dateType) {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          return formatValue(date, dateType);
+        }
+      }
+      
+      return value.toString();
     } catch (error) {
       console.error('Date formatting error:', error);
-      return value?.toString() || '';
+      return '';
     }
   };
 
@@ -141,10 +165,11 @@ const EditDialog = <TData,>({
     }
   };
 
-  const renderField = (accessorKey: string, isEditable: boolean, rawValue: any) => {
+  const renderField = (accessorKey: string, isEditable: boolean, rawValue: ColumnValue) => {
     const dateType = getDateType(accessorKey);
     const inputType = getInputType(accessorKey);
-    const displayValue = formatValue(rawValue, dateType);
+    const currentValue = formData[accessorKey as keyof TData] ?? rawValue;
+    const displayValue = formatValue(currentValue, dateType);
 
     if (!isEditable) {
       return (
@@ -155,9 +180,10 @@ const EditDialog = <TData,>({
     }
 
     if (accessorKey === 'area') {
+      const selectValue = currentValue?.toString() ?? '';
       return (
         <Select
-          value={formData[accessorKey as keyof TData]?.toString() || ''}
+          value={selectValue}
           onValueChange={(value) => handleInputChange(accessorKey, value)}
         >
           <SelectTrigger className="col-span-3 border-green-krnd">
@@ -168,9 +194,9 @@ const EditDialog = <TData,>({
               <SelectItem
                 key={option.value}
                 value={option.value}
-                className="flex items-start space-x-4 px-2 hover:bg-gray-100" // Ensure proper spacing and alignment of the checkmark and label
+                className="flex items-start space-x-4 px-2 hover:bg-gray-100"
               >
-                <span>{option.label}</span> {/* Label */}
+                <span>{option.label}</span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -183,10 +209,15 @@ const EditDialog = <TData,>({
         id={accessorKey}
         name={accessorKey}
         type={inputType}
-        value={formatValue(formData[accessorKey as keyof TData], dateType)}
-        onChange={(e) => handleInputChange(accessorKey, 
-          inputType === 'number' ? parseFloat(e.target.value) : e.target.value
-        )}
+        value={displayValue}
+        onChange={(e) => {
+          const newValue = e.target.value;
+          if (inputType === 'number') {
+            handleInputChange(accessorKey, newValue === '' ? null : parseFloat(newValue));
+          } else {
+            handleInputChange(accessorKey, newValue === '' ? null : newValue);
+          }
+        }}
         className="col-span-3 border-green-krnd"
       />
     );
@@ -201,7 +232,8 @@ const EditDialog = <TData,>({
         
         <div className="grid gap-4 py-4">
           {columns.map(column => {
-            const accessorKey = column.accessorKey as string;
+            const columnDef = column as { accessorKey?: string };
+            const accessorKey = columnDef.accessorKey;
             if (!accessorKey) return null;
 
             const isEditable = editableColumns.includes(accessorKey);

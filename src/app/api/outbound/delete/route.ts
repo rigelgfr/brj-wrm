@@ -1,7 +1,7 @@
 // app/api/outbound/delete/route.ts
-import { prisma } from "@/src/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { updateOutboundAggregates } from "../../operation_out/update/route";
+import { updateOutboundAggregates } from "../../operation_out/update/utils";
 
 export async function DELETE(req: Request) {
   try {
@@ -33,9 +33,14 @@ export async function DELETE(req: Request) {
   } catch (error) {
     console.error("[OUTBOUND_DELETE]", error);
 
-    if (error.code === "P2025") {
-      return new NextResponse("Row not found", { status: 404 });
-    }
+    if (typeof error === "object" && error !== null && "code" in error) {
+      const errorCode = (error as { code: string }).code;
+
+      if (errorCode === "P2025") {
+          return new NextResponse("Row not found", { status: 404 });
+      }
+  }
+
 
     return new NextResponse("Internal Server Error", { status: 500 });
   }

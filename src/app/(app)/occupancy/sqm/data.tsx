@@ -2,9 +2,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import FilterBar, { FilterState, defaultFilters, getStoredFilters, storeFilters } from '@/src/components/FilterBar'
-import { PieChart } from '@/src/components/PieChart'
-import Loading from '@/src/components/ui/Loading'
+import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/components/FilterBar'
+import { PieChart } from '@/components/PieChart'
+import Loading from '@/components/ui/Loading'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface OccupancySqmData {
@@ -33,6 +33,7 @@ export function OccupancySqmData() {
     fetchOccupancyData(filters);
     fetchSpaceData();
     setIsHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchOccupancyData = async (filters: FilterState) => {

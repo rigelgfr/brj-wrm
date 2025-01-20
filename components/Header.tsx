@@ -2,8 +2,8 @@
 
 // components/Header.tsx (your modified header)
 import { useState } from 'react';
-import { Ghost, Menu } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Menu } from 'lucide-react';
+import { Button } from './ui/button';
 import { Session } from 'next-auth';
 import SlidingMenu from './SlidingMenu';
 
@@ -22,7 +22,7 @@ export default function Header({
 
   return (
     <>
-      <header className="bg-[url('/images/main-bg.png')] bg-cover bg-center drop-shadow-sm">
+      <header className="bg-[url('/images/main-bg.png')] bg-cover bg-center">
         <div className="mx-[2em] h-12 flex items-center justify-between">
           <div className="text-2xl font-bold text-primary text-white">
             <Button

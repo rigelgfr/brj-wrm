@@ -1,9 +1,10 @@
+// inbound/page.tsx
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { Inbound, columns } from "./columns";
-import { DataTable } from "@/src/components/DataTable";
-import Loading from "@/src/components/ui/Loading";
+import { DataTable } from "@/components/DataTable";
+import Loading from "@/components/ui/Loading";
 
 export default function InboundPage() {
   const [data, setData] = useState<Inbound[]>([]);
@@ -40,8 +41,8 @@ export default function InboundPage() {
   }, [refreshTrigger]);
 
   const handleRefresh = useCallback(() => {
-    fetchInboundData();
-  }, [fetchInboundData]);
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   return (
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">

@@ -1,7 +1,17 @@
 // api/dashboard/route.ts
 
-import { prisma } from "@/src/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+
+// Helper function to safely convert Decimal to number
+const toNumber = (value: number | Prisma.Decimal | null | undefined): number => {
+    if (value === null || value === undefined) return 0;
+    if (value instanceof Prisma.Decimal) {
+        return value.toNumber();
+    }
+    return value;
+};
 
 export async function GET() {
     try {
@@ -124,10 +134,10 @@ export async function GET() {
             
             return {
                 month,
-                inboundTrucks: inboundMonth?._sum.unique_truck_count || 0,
-                outboundTrucks: outboundMonth?._sum.unique_truck_count || 0,
-                inboundVolume: inboundMonth?._sum.total_volume || 0,
-                outboundVolume: outboundMonth?._sum.total_volume || 0,
+                inboundTrucks: toNumber(inboundMonth?._sum.unique_truck_count) || 0,
+                outboundTrucks: toNumber(outboundMonth?._sum.unique_truck_count) || 0,
+                inboundVolume: toNumber(inboundMonth?._sum.total_volume) || 0,
+                outboundVolume: toNumber(outboundMonth?._sum.total_volume) || 0,
             };
         });
 

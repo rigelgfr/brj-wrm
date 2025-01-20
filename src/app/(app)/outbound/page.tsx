@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Outbound, columns } from "./columns";
-import { DataTable } from "@/src/components/DataTable";
-import Loading from "@/src/components/ui/Loading";
+import { DataTable } from "@/components/DataTable";
+import Loading from "@/components/ui/Loading";
 
 export default function OutboundPage() {
   const [data, setData] = useState<Outbound[]>([]);
@@ -40,8 +40,8 @@ export default function OutboundPage() {
   }, [refreshTrigger]);
 
   const handleRefresh = useCallback(() => {
-    fetchOutboundData();
-  }, [fetchOutboundData]);
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   return (
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
@@ -59,7 +59,7 @@ export default function OutboundPage() {
             data={data}
             onRefresh={handleRefresh}
             filters={inboundOutboundFilters}
-            isInbound={true}
+            isInbound={false}
           />
         )}
         </div>

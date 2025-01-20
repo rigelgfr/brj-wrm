@@ -2,9 +2,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import FilterBar, { FilterState, defaultFilters, getStoredFilters, storeFilters } from '@/src/components/FilterBar'
-import GroupedBarChart from '@/src/components/GroupedBarChart'
-import Loading from '@/src/components/ui/Loading'
+import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/components/FilterBar'
+import GroupedBarChart from '@/components/GroupedBarChart'
+import Loading from '@/components/ui/Loading'
 
 export interface OperationData {
   inbound: {
@@ -31,6 +31,7 @@ export default function OperationsData() {
     setFilters(getStoredFilters())  
     fetchOperationData(filters)
     setIsHydrated(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchOperationData = async (filters: FilterState) => {

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/src/components/FilterBar'
-import SingleBarChart from '@/src/components/SingleBarChart'
-import Loading from '@/src/components/ui/Loading'
+import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/components/FilterBar'
+import SingleBarChart from '@/components/SingleBarChart'
+import Loading from '@/components/ui/Loading'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface OccupancyVolData {
@@ -22,13 +22,24 @@ interface SpaceVolData {
   occupied: number | null
 }
 
+// Define the structure of the weekly data
+interface WeeklyData {
+  week: string;
+  occupied: number;
+}
+
+// Define the structure of the restructured data
+interface RestructuredData {
+  [warehouse: string]: WeeklyData[];
+}
+
 export function OccupancyVolData() {
   const [isLoading, setIsLoading] = useState(false)
   const [spaceData, setSpaceData] = useState<SpaceVolData[]>([])
   const [isLoadingSpace, setIsLoadingSpace] = useState(false)
   const [filters, setFilters] = useState<FilterState>(() => getStoredFilters())
   const [isHydrated, setIsHydrated] = useState(false)
-  const [allWeeksData, setAllWeeksData] = useState<any>({})
+  const [allWeeksData, setAllWeeksData] = useState<RestructuredData>({})
   const [currentMonth, setCurrentMonth] = useState('')
   const [currentYear, setCurrentYear] = useState('')
 
@@ -62,7 +73,7 @@ export function OccupancyVolData() {
       );
       
       // Restructure data by warehouse
-      const restructured: any = {};
+      const restructured: RestructuredData = {};
       results.forEach(({ week, data }) => {
         Object.entries(data).forEach(([warehouse, values]: [string, any]) => {
           if (!restructured[warehouse]) {

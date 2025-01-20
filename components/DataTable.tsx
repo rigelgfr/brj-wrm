@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-import { Button } from "./ui/Button"
+import { Button } from "./ui/button"
 import { Input } from "@/components/ui/input"
 import FileUploadDialog from './FileUploadDialog';
 import { Upload } from "lucide-react"
@@ -81,6 +81,9 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+    },
+    meta: {
+      onRefresh
     }
   });
 

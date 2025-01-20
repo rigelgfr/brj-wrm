@@ -1,5 +1,4 @@
-// components/AddOccupancyDialog.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import ConfirmDialog from './ui/ConfirmDialog';
-import { DialogDescription } from './ui/Dialog';
+import { DialogDescription } from './ui/dialog';
 
 interface AddOccupancyDialogProps {
   isOpen: boolean;
@@ -32,27 +31,7 @@ const AddOccupancyDialog: React.FC<AddOccupancyDialogProps> = ({
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchLastPeriod();
-    }
-  }, [isOpen]);
-
-  const fetchLastPeriod = async () => {
-    try {
-      const response = await fetch("/api/inventory/table");
-      const data = await response.json();
-      
-      if (data.occupancySqm.length > 0) {
-        const lastRow = data.occupancySqm[data.occupancySqm.length - 1];
-        calculateNextPeriod(lastRow.year, lastRow.month, lastRow.week);
-      }
-    } catch (error) {
-      console.error("Error fetching last period:", error);
-    }
-  };
-
-  const calculateNextPeriod = (year: number, month: string, week: string) => {
+  const calculateNextPeriod = useCallback((year: number, month: string, week: string) => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentWeek = parseInt(week.substring(1));
     
@@ -79,7 +58,27 @@ const AddOccupancyDialog: React.FC<AddOccupancyDialogProps> = ({
       month: nextMonth,
       week: `W${nextWeek}`,
     });
-  };
+  }, []);
+
+  const fetchLastPeriod = useCallback(async () => {
+    try {
+      const response = await fetch("/api/inventory/table");
+      const data = await response.json();
+      
+      if (data.occupancySqm.length > 0) {
+        const lastRow = data.occupancySqm[data.occupancySqm.length - 1];
+        calculateNextPeriod(lastRow.year, lastRow.month, lastRow.week);
+      }
+    } catch (error) {
+      console.error("Error fetching last period:", error);
+    }
+  }, [calculateNextPeriod]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchLastPeriod();
+    }
+  }, [isOpen, fetchLastPeriod]);
 
   const handleSubmit = async () => {
     if (!nextPeriod) return;

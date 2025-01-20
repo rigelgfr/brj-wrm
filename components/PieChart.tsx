@@ -9,7 +9,18 @@ interface PieChartProps {
   title: string
 }
 
-const customLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+// Define the interface for the label props
+interface CustomLabelProps {
+  cx: number
+  cy: number
+  midAngle: number
+  innerRadius: number
+  outerRadius: number
+  percent: number
+  index: number
+}
+
+const customLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: CustomLabelProps) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);

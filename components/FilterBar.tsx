@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/src/components/ui/Button"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +18,10 @@ export type FilterState = Record<SlicerType, string[]>
 
 export const filterOptions: Record<SlicerType, FilterOption[]> = {
   year: [
+    { value: '2022', label: '2022' },
     { value: '2023', label: '2023' },
     { value: '2024', label: '2024' },
+    { value: '2025', label: '2025' },
   ],
   month: [
     { value: 'January', label: 'Jan' },
@@ -174,13 +176,6 @@ export default function FilterBar({
     onFiltersChange(filters)
     setIsOpen(false)
   }
-
-  // Format selected filters for display
-  const formatSelectedValues = (type: SlicerType) => {
-    return filters[type]
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true })) // Sort alphabetically or numerically
-      .join(', ');
-  };
 
   return (
     <div className="space-y-4">

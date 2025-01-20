@@ -1,16 +1,16 @@
-// columns.tsx
+// inventorycolumns.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { ColumnDef, ColumnFiltersState } from "@tanstack/react-table";
+import { useState, useEffect, useCallback } from "react";
+import { ColumnDef, ColumnFiltersState, PaginationState, Row, Table } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/src/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { StickyNote, MoreHorizontal, Plus } from "lucide-react";
-import { BasicTable } from "@/src/components/BasicTable";
-import AddOccupancyDialog from '@/src/components/AddOccupancyDialog';
+import { BasicTable } from "@/components/BasicTable";
+import AddOccupancyDialog from '@/components/AddOccupancyDialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import EditDialog from "@/src/components/EditDialog";
-import Loading from "@/src/components/ui/Loading";
+import EditDialog from "@/components/EditDialog";
+import Loading from "@/components/ui/Loading";
 
 // Types remain the same
 export type OccupancySqm = {
@@ -31,14 +31,111 @@ export type OccupancyVol = {
   space: number;
 };
 
+// Meta type for columns
+interface ColumnMetaType {
+  onRefresh?: () => void;
+}
+
+type ColumnDefWithMeta<T> = ColumnDef<T> & {
+  meta?: ColumnMetaType;
+};
+
+interface ActionCellProps {
+  row: Row<OccupancySqm | OccupancyVol>;
+  table: Table<OccupancySqm | OccupancyVol>;
+  tableType: 'sqm' | 'vol';
+  unit: string;
+}
+
+const ActionCell = ({ row, table, tableType, unit }: ActionCellProps) => {
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  const handleSubmit = async (data: Partial<OccupancySqm | OccupancyVol>) => {
+    try {
+      const { year, month, week, wh_type, status } = row.original;
+
+      const response = await fetch('/api/inventory/update', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tableType,
+          year,
+          month,
+          week,
+          wh_type,
+          status,
+          ...data
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update record');
+      }
+
+      setShowEditDialog(false);
+
+      if (table.options.meta?.onRefresh) {
+        table.options.meta.onRefresh();
+      }
+
+    } catch (error) {
+      console.error('Failed to update:', error);
+      throw error;
+    }
+  };
+
+  const editableColumns = ["space"];
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
+            Edit
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditDialog
+        row={row.original}
+        columns={createColumns(unit, tableType)}
+        editableColumns={editableColumns}
+        isOpen={showEditDialog}
+        onClose={() => setShowEditDialog(false)}
+        onSubmit={handleSubmit}
+        primaryKeyField="year"
+      />
+    </>
+  );
+};
+
+// Update the table meta interface
+declare module '@tanstack/table-core' {
+  interface TableMeta<TData> {
+    onRefresh?: () => void;
+  }
+}
+
 // Create columns with enableColumnFilter
-const createColumns = (unit: string, tableType: 'sqm' | 'vol'): ColumnDef<OccupancySqm | OccupancyVol>[] => [
+const createColumns = (
+  unit: string, 
+  tableType: 'sqm' | 'vol',
+  onRefresh?: () => void
+): ColumnDef<OccupancySqm | OccupancyVol>[] => [
   {
     accessorKey: "year",
     header: "Year",
     cell: ({ row }) => <div className="text-center">{row.getValue("year")}</div>,
     enableColumnFilter: true,
-    filterFn: (row, id, filterValue) => {
+    filterFn: (row: { getValue: (columnId: string) => any}, id: string, filterValue: any) => {
       const year = row.getValue(id).toString();
       const search = filterValue.toString();
       return year.includes(search);
@@ -77,81 +174,18 @@ const createColumns = (unit: string, tableType: 'sqm' | 'vol'): ColumnDef<Occupa
     id: "actions",
     header: () => (
       <div className="flex items-center">
-        <StickyNote className="h-4 w-4 mx-auto" /> {/* The icon with styling */}
+        <StickyNote className="h-4 w-4 mx-auto" />
       </div>
     ),
-    cell: ({ row, column }) => {
-      const [showEditDialog, setShowEditDialog] = useState(false);
-
-      const onRefresh = column.columnDef.meta?.onRefresh;
-
-      const handleSubmit = async (data: Partial<OccupancySqm | OccupancyVol>, identifier: any) => {
-        try {
-          const { year, month, week, wh_type, status } = row.original;
-
-          const response = await fetch('/api/inventory/update', {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              tableType,
-              year,
-              month,
-              week,
-              wh_type,
-              status,
-              ...data
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to update record');
-          }
-
-          if (onRefresh) {
-            onRefresh();
-          }
-
-        } catch (error) {
-          console.error('Failed to update:', error);
-          throw error;
-        }
-      };
-
-      const editableColumns = ["space"];
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0"
-              >
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="hover:bg-gray-200">
-                Edit
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <EditDialog
-            row={row.original}
-            columns={createColumns(unit, tableType)}
-            editableColumns={editableColumns}
-            isOpen={showEditDialog}
-            onClose={() => setShowEditDialog(false)}
-            onSubmit={handleSubmit}
-            primaryKeyField="year"
-          />
-        </>
-      )
-  }}
+    cell: ({ row, table }) => (
+      <ActionCell 
+        row={row}
+        table={table}
+        tableType={tableType}
+        unit={unit}
+      />
+    ),
+  }
 ];
 
 export const occupancySqmColumns = createColumns("m²", 'sqm');
@@ -164,14 +198,15 @@ export function InventoryTables() {
   const [sqmFilters, setSqmFilters] = useState<ColumnFiltersState>([]);
   const [volFilters, setVolFilters] = useState<ColumnFiltersState>([]);
   const [isLoading, setIsLoading] = useState(false);
-
   const [pagination, setPagination] = useState<PaginationState>({
   pageIndex: 0,
   pageSize: 20,
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
+    console.log('Loading started'); // Add this debug log
+
     try {
       const response = await fetch("/api/inventory/table");
       const data = await response.json();
@@ -182,11 +217,16 @@ export function InventoryTables() {
     } finally {
       setIsLoading(false)    
     }
+  }, []);
+
+   // Simple refresh handler
+   const handleRefresh = () => {
+    fetchData();
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const resetFilters = () => {
     setSqmFilters([]);
@@ -203,20 +243,16 @@ export function InventoryTables() {
             value={(sqmFilters.find(f => f.id === "year")?.value as number) || ""}
             onChange={(e) => {
               const value = e.target.value;
-              const filterFn = (row: any) => {
-                if (!value) return true;
-                const year = row.getValue("year").toString();
-                return year.includes(value);
-              };
               
               setSqmFilters(prev => {
                 const newFilters = prev.filter(f => f.id !== "year");
-                if (value) newFilters.push({ id: "year", value, operator: "custom", fn: filterFn });
+                if (value) newFilters.push({ id: "year", value });
                 return newFilters;
               });
+
               setVolFilters(prev => {
                 const newFilters = prev.filter(f => f.id !== "year");
-                if (value) newFilters.push({ id: "year", value, operator: "custom", fn: filterFn });
+                if (value) newFilters.push({ id: "year", value });
                 return newFilters;
               });
             }}
@@ -332,7 +368,7 @@ export function InventoryTables() {
               <BasicTable 
                 columns={occupancySqmColumns}
                 data={sqmData}
-                onRefresh={fetchData}
+                onRefresh={handleRefresh}
                 columnFilters={sqmFilters}
                 onColumnFiltersChange={setSqmFilters}
                 pagination={pagination}
@@ -350,7 +386,7 @@ export function InventoryTables() {
               <BasicTable 
                 columns={occupancyVolColumns}
                 data={volData}
-                onRefresh={fetchData}
+                onRefresh={handleRefresh}
                 columnFilters={volFilters}
                 onColumnFiltersChange={setVolFilters}
                 pagination={pagination}
@@ -363,7 +399,6 @@ export function InventoryTables() {
         </div>
       )}
 
-      {/* Separated pagination controls */}
       <div className="w-full mt-4 border-t pt-4">
         <div className="flex items-center justify-end px-2">
           <div className="flex items-center space-x-2">

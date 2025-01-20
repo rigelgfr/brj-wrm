@@ -2,19 +2,44 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import Clock from '@/src/components/Clock';
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import Clock from '@/components/Clock';
+import { Card, CardContent } from "@/components/ui/card";
 import { TruckDataCard, VolumeDataCard, TruckTrendsChart, VolumeTrendsChart, OccupancyDonut, OccupancyVolumeChart, LatestInboundTable, LatestOutboundTable } from './data';
-import Loading from '@/src/components/ui/Loading';
+import Loading from '@/components/ui/Loading';
 
-const DashboardLayout = () => {
-    const [data, setData] = useState({ 
+interface DashboardData {
+    data: any[];
+    currentMonth: any;
+    occupancy: any;
+    latestInbounds: any[];
+    latestOutbounds: any[];
+}
+
+interface MonthlyData {
+    month: string;
+    inboundTrucks: number;
+    outboundTrucks: number;
+    inboundVolume: number;
+    outboundVolume: number;
+}
+const DashboardLayout: React.FC = () => {
+    const [data, setData] = useState<DashboardData>({ 
       data: [], 
-      currentMonth: {},
-      occupancy: null
+      currentMonth: {
+        inboundTrucks: 0,
+        outboundTrucks: 0,
+        inboundVolume: 0,
+        outboundVolume: 0
+      },
+      occupancy: {
+        sqm: { period: { year: 0, month: '', week: 0 }, data: [] },
+        volume: { period: { year: 0, month: '', week: 0 }, data: [] }
+      },
+      latestInbounds: [],
+      latestOutbounds: [],
     });
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -29,7 +54,12 @@ const DashboardLayout = () => {
                 setData(result);
             } catch (err) {
                 console.error('Error fetching data:', err);
-                setError(err.message);
+
+                if(err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError("An unknown error occurred.");
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -39,10 +69,16 @@ const DashboardLayout = () => {
     }, []);
 
     // Calculate maximum values for Y-axis limits
-    const getMaxValue = (dataArray, keys) => {
+    const getMaxValue = (dataArray: MonthlyData[], keys: (keyof MonthlyData)[]): number => {
       if (!dataArray || dataArray.length === 0) return 0;
-      return Math.ceil(Math.max(
-          ...dataArray.flatMap(item => keys.map(key => item[key] || 0))
+      return Math.ceil(
+        Math.max(
+          ...dataArray.flatMap(item => 
+            keys.map(key => {
+                const value = item[key];
+                return typeof value === 'number' ? value : 0;
+            })
+        )
       ) * 1.1);
     };
 
@@ -54,7 +90,7 @@ const DashboardLayout = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-2 gap-6">
                 <div className='col-span-1 md:col-span-2 flex flex-row border-b-2'>
                     <div className='flex flex-col justify-start mr-4 items-start '>
-                        <h1 className="text-3xl font-normal text-lightgrey-krnd">Bimaruna Jaya</h1>
+                        <h1 className="text-3xl font-normal text-lightgrey-krnd">BRJ Warehouse</h1>
                         <h1 className="text-5xl font-bold text-green-krnd">Dashboard</h1>
                     </div>
                     <div className='w-full h-full flex justify-end items-center'>

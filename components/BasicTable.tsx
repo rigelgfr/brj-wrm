@@ -11,6 +11,7 @@ import {
   getFilteredRowModel,
   PaginationState,
   getPaginationRowModel,
+  OnChangeFn,
 } from "@tanstack/react-table"
 
 import {
@@ -27,9 +28,9 @@ interface BasicTableProps<TData, TValue> {
   data: TData[]
   onRefresh?: () => void
   columnFilters?: ColumnFiltersState
-  onColumnFiltersChange?: (filters: ColumnFiltersState) => void
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
   pagination?: PaginationState
-  onPaginationChange?: (pagination: PaginationState) => void
+  onPaginationChange?: OnChangeFn<PaginationState>
   pageSize?: number
 }
 
@@ -76,6 +77,7 @@ export function BasicTable<TData, TValue>({
         pageSize: pageSize,
       },
     },
+    meta: { onRefresh },
   });
 
   return (

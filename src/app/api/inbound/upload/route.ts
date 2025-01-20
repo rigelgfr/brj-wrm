@@ -1,8 +1,94 @@
 // api/inbound/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'csv-parse';
-import { prisma } from '@/src/lib/prisma';
-import { updateInboundAggregates } from '../../operation_in/update/route';
+import { prisma } from '@/lib/prisma';
+import { updateInboundAggregates } from '../../operation_in/update/utils';
+
+interface CSVRow {
+  'NO': string;
+  'WH NAME': string;
+  'AREA': string;
+  'INBOUND DOC TYPE': string;
+  'INBOUND DOC': string;
+  'RECEIVING DOC': string;
+  'CUSTOMER NAME': string;
+  'SHIPPER NAME': string;
+  'BL/DO': string;
+  'AJU NO': string;
+  'TRUCK TYPE': string;
+  'PLAT NO': string;
+  'CONTAINER NO': string;
+  'SEAL NO': string;
+  'ITEM CODE': string;
+  'ITEM NAME': string;
+  'QTY': string;
+  'UOM': string;
+  'NETT WEIGHT': string;
+  'GROSS WEIGHT': string;
+  'VOLUME': string;
+  'BATCH': string;
+  'NPE NO': string;
+  'NPE DATE': string;
+  'PEB NO': string;
+  'PEB DATE': string;
+  'REMARK': string;
+  'DOCK NO': string;
+  'DOC STATUS': string;
+  'USER ADMIN': string;
+  'START TALLY': string;
+  'FINISH TALLY': string;
+  'USER TALLY': string;
+  'START PUTAWAY': string;
+  'FINISH PUTAWAY': string;
+  'USER PUTAWAY': string;
+  'INBOUND DATE': string;
+  'GATE IN': string;
+}
+
+interface ProcessedData {
+  no: number;
+  wh_name: string;
+  warehouses: {
+    connect: {
+      wh_name: string
+    };
+  };
+  inbound_date: Date;  // We’ll handle this as a string for formatting
+  gate_in: Date;
+  inbound_doc_type: string;
+  inbound_doc: string;
+  receiving_doc: string;
+  customer_name: string;
+  shipper_name: string;
+  bl_do: string;
+  aju_no: string;
+  truck_type: string;
+  plat_no: string;
+  container_no: string;
+  seal_no: string;
+  item_code: string;
+  item_name: string;
+  qty: number;
+  uom: string;
+  nett_weight: number;
+  gross_weight: number;
+  volume: number;
+  batch: string;
+  npe_no: string;
+  npe_date: Date;
+  peb_no: string;
+  peb_date: Date;
+  remark: string;
+  dock_no: string;  
+  doc_status: string;
+  user_admin: string;
+  start_tally: Date;
+  finish_tally: Date;
+  user_tally: string;
+  start_putaway: Date;
+  finish_putaway: Date;
+  user_putaway: string;
+}
 
 // Helper function to convert string to number with comma handling
 const processNumeric = (value: string | null | undefined): number => {
@@ -82,7 +168,7 @@ const processTimestamp = (timestampStr: string | null | undefined): Date => {
   }
 };
 
-const processCSVData = (csvData: any[]) => {
+const processCSVData = (csvData: CSVRow[]): ProcessedData[] => {
   return csvData
     // Filter out rows with empty AREA
     .filter(row => row['AREA'] && row['AREA'].trim() !== '')
@@ -92,7 +178,13 @@ const processCSVData = (csvData: any[]) => {
       
       // String fields
       wh_name: row['WH NAME'] || '',
-      area: row['AREA'],
+
+      warehouses: {
+        connect: {
+          wh_name: row['AREA'] || ''
+        }
+      },
+
       inbound_doc_type: row['INBOUND DOC TYPE'] || '',
       inbound_doc: row['INBOUND DOC'] || '',
       receiving_doc: row['RECEIVING DOC'] || '',
@@ -152,7 +244,7 @@ export async function POST(request: NextRequest) {
     const fileBuffer = await file.arrayBuffer();
     const fileContent = new TextDecoder().decode(fileBuffer);
     
-    const records: any[] = [];
+    const records: CSVRow[] = [];
     const parser = parse(fileContent, {
       columns: true,
       skip_empty_lines: true,

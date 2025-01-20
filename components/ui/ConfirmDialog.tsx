@@ -52,7 +52,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="flex place-items-center">
-          <AlertDialogCancel className='mb-2 border-gray-400'>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel className='border-gray-400'>{cancelText}</AlertDialogCancel>
           <AlertDialogAction 
             className={`${getButtonStyles()} text-white`} 
             onClick={onContinue}

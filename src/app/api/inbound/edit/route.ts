@@ -1,7 +1,7 @@
 // app/api/inbound/edit/route.ts
-import { prisma } from "@/src/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { updateInboundAggregates } from "../../operation_in/update/route";
+import { updateInboundAggregates } from "../../operation_in/update/utils";
 
 const EDITABLE_COLUMNS = [
   "area",

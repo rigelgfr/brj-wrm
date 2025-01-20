@@ -1,4 +1,4 @@
-import { Spinner } from "@/src/components/ui/Spinner"; // Assuming you have a Spinner component
+import { Spinner } from "@/components/ui/Spinner"; // Assuming you have a Spinner component
 
 export default function Loading() {
   return (

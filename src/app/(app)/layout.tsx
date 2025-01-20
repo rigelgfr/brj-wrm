@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next"
 import { redirect } from 'next/navigation'
-import { authOptions } from "../api/auth/[...nextauth]/route"
-import Header from "@/src/components/Header"
+import { authOptions } from "../api/auth/auth.config"
+import Header from "@/components/Header"
 export default async function DashboardLayout({
   children,
 }: {

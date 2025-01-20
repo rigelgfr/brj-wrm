@@ -1,5 +1,5 @@
 // app/api/operation_in/chart/route.ts
-import { prisma } from "@/src/lib/prisma"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
