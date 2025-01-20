@@ -1,4 +1,6 @@
 // app/api/occupancy_vol/route.ts
+export const dynamic = 'force-dynamic';
+
 import { prisma } from "@/lib/prisma"
 
 const monthMap: Record<string, string> = {

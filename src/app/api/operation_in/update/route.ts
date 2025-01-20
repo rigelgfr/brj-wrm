@@ -1,4 +1,6 @@
 // app/api/operation_in/update/route.ts
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { updateInboundAggregates } from './utils';
 
@@ -10,4 +12,3 @@ export async function PUT() {
   return NextResponse.json(result);
 }
 
-export const dynamic = 'force-dynamic';

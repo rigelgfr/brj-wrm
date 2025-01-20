@@ -1,4 +1,6 @@
 // app/api/operation_in/chart/route.ts
+export const dynamic = 'force-dynamic';
+
 import { prisma } from "@/lib/prisma"
 
 export async function GET(request: Request) {

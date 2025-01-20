@@ -1,4 +1,6 @@
 // app/api/outbound/delete/route.ts
+export const dynamic = 'force-dynamic';
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { updateOutboundAggregates } from "../../operation_out/update/utils";

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import InputBox from '@/components/ui/InputBox';
 import ErrorPopup from '@/components/ui/ErrorPopup';
+import loginCardBg from '@/public/images/login-card1.jpg';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -84,7 +85,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center min-h-screen bg-[url('/images/main-bg.png')] bg-cover bg-center">
         <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="flex flex-col md:flex-row">
-            <div className="relative w-full md:w-1/2 md:h-auto bg-[url('/images/login-card1.jpg')] bg-cover">
+            <div className="relative w-full md:w-1/2 md:h-auto bg-[url('/images/login-card1.JPG')] bg-cover">
               <div className="absolute inset-0 bg-gradient-to-t from-black to-green-800 opacity-75"></div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div>
