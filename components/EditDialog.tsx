@@ -18,6 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateTimePicker } from './ui/datetime-picker';
+import { SimpleTimePicker } from './ui/time-picker';
+import { format } from "date-fns";
 import ConfirmDialog from './ui/ConfirmDialog';
 
 type ColumnValue = string | number | Date | null;
@@ -58,7 +61,6 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
     const initialData: Partial<TData> = {};
     editableColumns.forEach(key => {
       const value = row[key as keyof TData];
-      // Only assign the value if it exists, otherwise leave it undefined
       if (value !== null && value !== undefined) {
         initialData[key as keyof TData] = value;
       }
@@ -71,7 +73,6 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
 
   const handleInputChange = (key: string, value: ColumnValue) => {
     if (value === '') {
-      // If empty string, remove the key from formData
       const newFormData = { ...formData };
       delete newFormData[key as keyof TData];
       setFormData(newFormData);
@@ -81,6 +82,135 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
         [key]: value
       }));
     }
+  };
+
+  const getDateType = (columnName: string): 'date' | 'time' | 'datetime' | null => {
+    if (columnName.includes('_date')) return 'date';
+    if (columnName === 'gate_in' || columnName === 'outbound_time') return 'time';
+    if (columnName.includes('start_') || columnName.includes('finish_')) return 'datetime';
+    return null;
+  };
+
+  const getDisplayValue = (value: ColumnValue, dateType: 'date' | 'time' | 'datetime' | null): string => {
+    if (!value) return '';
+    
+    try {
+      const date = value instanceof Date ? value : new Date(value.toString());
+      
+      switch (dateType) {
+        case 'date':
+          return format(date, 'dd/MM/yyyy');
+        case 'time':
+          return format(date, 'HH:mm');
+        case 'datetime':
+          return format(date, 'dd/MM/yyyy HH:mm');
+        default:
+          return value.toString();
+      }
+    } catch {
+      return '';
+    }
+  };
+
+  const renderDateTimePicker = (accessorKey: string, currentValue: ColumnValue, dateType: 'date' | 'time' | 'datetime') => {
+    const value = currentValue ? new Date(currentValue.toString()) : new Date();
+    
+    const commonProps = {
+      value,
+      onChange: (newDate: Date | undefined) => handleInputChange(accessorKey, newDate),
+      clearable: true,
+      classNames: {
+        trigger: 'w-full'
+      }
+    };
+  
+    switch (dateType) {
+      case 'date':
+        return (
+          <DateTimePicker
+            {...commonProps}
+            hideTime={true}
+          />
+        );
+      case 'time':
+        return (
+          <SimpleTimePicker
+            value={value}
+            onChange={(date: Date) => handleInputChange(accessorKey, date)}
+            disabled={false}
+            modal={true}
+          />
+        );
+      default: // datetime
+        return (
+          <DateTimePicker
+            {...commonProps}
+            hideTime={false}
+            timePicker={{
+              hour: true,
+              minute: true,
+              second: true
+            }}
+          />
+        );
+    }
+  };
+
+  const renderField = (accessorKey: string, isEditable: boolean, rawValue: ColumnValue) => {
+    const dateType = getDateType(accessorKey);
+    const currentValue = formData[accessorKey as keyof TData] ?? rawValue;
+    
+    // For non-editable fields
+    if (!isEditable) {
+      return (
+        <div className="col-span-3 p-2 bg-gray-100 rounded">
+          {getDisplayValue(currentValue, dateType)}
+        </div>
+      );
+    }
+
+    // For editable fields
+    if (accessorKey === 'area') {
+      return (
+        <Select
+          value={currentValue?.toString() ?? ''}
+          onValueChange={(value) => handleInputChange(accessorKey, value)}
+        >
+          <SelectTrigger className="col-span-3">
+            <SelectValue placeholder="Select warehouse area" />
+          </SelectTrigger>
+          <SelectContent>
+            {AREA_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    }
+
+    // Handle different date/time types
+    if (dateType) {
+      return renderDateTimePicker(accessorKey, currentValue, dateType);
+    }
+
+    // For regular input fields
+    return (
+      <Input
+        type={typeof rawValue === 'number' ? 'number' : 'text'}
+        value={currentValue?.toString() ?? ''}
+        onChange={(e) => {
+          const newValue = e.target.value;
+          if (typeof rawValue === 'number') {
+            handleInputChange(accessorKey, newValue === '' ? null : parseFloat(newValue));
+          } else {
+            handleInputChange(accessorKey, newValue === '' ? null : newValue);
+          }
+        }}
+        className="col-span-3"
+      />
+    );
   };
 
   const handleSubmit = async () => {
@@ -110,117 +240,6 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
     });
     setFormData(initialData);
     onClose();
-  };
-
-  const getDateType = (columnName: string): 'date' | 'time' | 'datetime' | null => {
-    if (columnName.includes('_date')) return 'date';
-    if (columnName === 'gate_in' || columnName === 'outbound_time') return 'time';
-    if (columnName.includes('start_') || columnName.includes('finish_')) return 'datetime';
-    return null;
-  };
-
-  const formatValue = (value: ColumnValue, dateType: 'date' | 'time' | 'datetime' | null): string => {
-    if (value === null || value === undefined) return '';
-
-    try {
-      if (value instanceof Date) {
-        switch (dateType) {
-          case 'date':
-            return value.toISOString().split('T')[0];
-          case 'time':
-            return value.toTimeString().slice(0, 5);
-          case 'datetime':
-            return value.toISOString().slice(0, -8); // Remove seconds and timezone
-          default:
-            return value.toString();
-        }
-      }
-      
-      if (typeof value === 'string' && dateType) {
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          return formatValue(date, dateType);
-        }
-      }
-      
-      return value.toString();
-    } catch (error) {
-      console.error('Date formatting error:', error);
-      return '';
-    }
-  };
-
-  const getInputType = (columnName: string): string => {
-    const dateType = getDateType(columnName);
-    switch (dateType) {
-      case 'date':
-        return 'date';
-      case 'time':
-        return 'time';
-      case 'datetime':
-        return 'datetime-local';
-      default:
-        const value = row[columnName as keyof TData];
-        return typeof value === 'number' ? 'number' : 'text';
-    }
-  };
-
-  const renderField = (accessorKey: string, isEditable: boolean, rawValue: ColumnValue) => {
-    const dateType = getDateType(accessorKey);
-    const inputType = getInputType(accessorKey);
-    const currentValue = formData[accessorKey as keyof TData] ?? rawValue;
-    const displayValue = formatValue(currentValue, dateType);
-
-    if (!isEditable) {
-      return (
-        <div className="col-span-3 p-2 bg-gray-200 rounded">
-          {displayValue}
-        </div>
-      );
-    }
-
-    if (accessorKey === 'area') {
-      const selectValue = currentValue?.toString() ?? '';
-      return (
-        <Select
-          value={selectValue}
-          onValueChange={(value) => handleInputChange(accessorKey, value)}
-        >
-          <SelectTrigger className="col-span-3 border-green-krnd">
-            <SelectValue placeholder="Select warehouse area" />
-          </SelectTrigger>
-          <SelectContent>
-            {AREA_OPTIONS.map((option) => (
-              <SelectItem
-                key={option.value}
-                value={option.value}
-                className="flex items-start space-x-4 px-2 hover:bg-gray-100"
-              >
-                <span>{option.label}</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    }
-
-    return (
-      <Input
-        id={accessorKey}
-        name={accessorKey}
-        type={inputType}
-        value={displayValue}
-        onChange={(e) => {
-          const newValue = e.target.value;
-          if (inputType === 'number') {
-            handleInputChange(accessorKey, newValue === '' ? null : parseFloat(newValue));
-          } else {
-            handleInputChange(accessorKey, newValue === '' ? null : newValue);
-          }
-        }}
-        className="col-span-3 border-green-krnd"
-      />
-    );
   };
 
   return (
@@ -257,7 +276,7 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} className='border-gray-400'>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button 
@@ -267,7 +286,7 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
             Save Changes
           </Button>
         </DialogFooter>
-          
+        
         <ConfirmDialog
           open={showAlert}
           onOpenChange={setShowAlert}
@@ -278,7 +297,6 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
           continueText="Yes, Save"
           variant='success'
         />
-        
       </DialogContent>
     </Dialog>
   );

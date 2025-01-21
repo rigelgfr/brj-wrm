@@ -233,6 +233,17 @@ const processCSVData = (csvData: CSVRow[]): ProcessedData[] => {
     }));
 };
 
+const BATCH_SIZE = 100; // Adjust based on your needs
+
+async function processBatch(batch: ProcessedData[]) {
+  return await prisma.$transaction(async (tx) => {
+    const promises = batch.map(row => 
+      tx.inbound.create({ data: row })
+    );
+    return await Promise.all(promises);
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -258,14 +269,30 @@ export async function POST(request: NextRequest) {
 
     // Process the CSV data
     const processedData = processCSVData(records);
+    
+    // Process in batches
+    const batches = [];
+    for (let i = 0; i < processedData.length; i += BATCH_SIZE) {
+      batches.push(processedData.slice(i, i + BATCH_SIZE));
+    }
 
-    // Insert into database using Prisma transaction
-    await prisma.$transaction(async (tx) => {
-      for (const row of processedData) {
-        await tx.inbound.create({ data: row });
+    let processedCount = 0;
+    let failedBatches = 0;
+
+    // Process each batch
+    for (let i = 0; i < batches.length; i++) {
+      try {
+        await processBatch(batches[i]);
+        processedCount += batches[i].length;
+        console.log(`Processed batch ${i + 1}/${batches.length}: ${processedCount} records complete`);
+      } catch (error) {
+        failedBatches++;
+        console.error(`Error in batch ${i + 1}:`, error);
+        // Continue processing other batches even if one fails
       }
-    });
+    }
 
+    // Update aggregates after all batches are processed
     try {
       const result = await updateInboundAggregates();
       console.log('Aggregate update result:', result);
@@ -273,9 +300,14 @@ export async function POST(request: NextRequest) {
       console.error('Error updating aggregates:', error);
     }
     
+    // Return response with detailed statistics
     return NextResponse.json({
-      message: 'CSV file processed successfully',
-      recordCount: processedData.length
+      message: 'CSV file processing complete',
+      totalRecords: processedData.length,
+      processedRecords: processedCount,
+      failedBatches,
+      totalBatches: batches.length,
+      success: failedBatches === 0
     });
 
   } catch (error) {

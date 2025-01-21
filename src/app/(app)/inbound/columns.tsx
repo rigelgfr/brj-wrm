@@ -15,6 +15,8 @@ import {
 import EditDialog from "@/components/EditDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
+import { formatLeadtime } from "../utils";
+
 // Define the shape of the inbound data
 export type Inbound = {
   no: number;
@@ -59,6 +61,8 @@ export type Inbound = {
   month: string;
   week_no: string;
   week_in_month: string;
+  leadtime_unload: number | null;
+  leadtime_put: number | null;
 };
 
 // Define the meta type for columns
@@ -143,6 +147,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
   const editableColumns = [
     "area",
     "inbound_date",
+    "gate_in",
     "inbound_doc_type",
     "inbound_doc",
     "receiving_doc",
@@ -170,7 +175,11 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
     "doc_status",
     "user_admin",
     "user_tally",
-    "user_putaway"
+    "user_putaway",
+    "start_tally",
+    "finish_tally",
+    "start_putaway",
+    "finish_putaway",
   ];
 
   return (
@@ -508,6 +517,14 @@ export const columns: ColumnDefWithMeta<Inbound>[] = [
       },
     },
     {
+      accessorKey: "leadtime_unload",
+      header: "Leadtime Unload",
+      cell: ({ row }) => {
+        const value = row.getValue("leadtime_unload");
+        return <div className="text-right">{formatLeadtime(value as number | null)}</div>;
+      },
+    },
+    {
       accessorKey: "user_tally",
       header: "User Tally",
     },
@@ -589,6 +606,14 @@ export const columns: ColumnDefWithMeta<Inbound>[] = [
           // Handle invalid Date cases
           return <div>Invalid Date/Time</div>;
         }
+      },
+    },
+    {
+      accessorKey: "leadtime_put",
+      header: "Leadtime Putaway",
+      cell: ({ row }) => {
+        const value = row.getValue("leadtime_put");
+        return <div className="text-right">{formatLeadtime(value as number | null)}</div>;
       },
     },
     {

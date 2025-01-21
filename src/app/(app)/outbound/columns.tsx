@@ -15,6 +15,8 @@ import {
 import EditDialog from "@/components/EditDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
+import { formatLeadtime } from "../utils";
+
 // Define the shape of the outbound data
 export type Outbound = {
   no: number;
@@ -62,6 +64,8 @@ export type Outbound = {
   month: string;
   week_no: string;
   week_in_month: string;
+  leadtime_picking: number | null;
+  leadtime_load: number | null;
 };
 
 // Define the meta type for columns
@@ -145,6 +149,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
   const editableColumns = [
       "area",
       "outbound_date",
+      "outbound_time",
       "loading_date",
       "outbound_doc_type",
       "outbound_doc",
@@ -175,7 +180,11 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
       "remark",
       "doc_status",
       "user_admin",
+      "start_picking",
+      "finish_picking",
       "user_picking",
+      "start_loading",
+      "finish_loading",
       "user_loading",
   ];
 
@@ -455,7 +464,6 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
         }
       
         try {
-          // Ensure the value is a Date object
           if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
             const dateObject = new Date(timeValue)
 
@@ -463,12 +471,21 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
               return <div>Invalid time</div>
             }
 
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-          return <div className="text-right">{formattedTime}</div>;
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+            return <div className="text-right">{formattedDateTime}</div>;
           }
-          
-          return <div>Invalid Time</div>;
+
+          // If timeValue is of an unsupported type
+          return <div>Invalid Time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Time</div>;
@@ -487,7 +504,6 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
         }
       
         try {
-          // Ensure the value is a Date object
           if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
             const dateObject = new Date(timeValue)
 
@@ -495,18 +511,33 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
               return <div>Invalid time</div>
             }
 
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
-
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+            return <div className="text-right">{formattedDateTime}</div>;
           }
-          
-          return <div>Invalid time</div>
+
+          // If timeValue is of an unsupported type
+          return <div>Invalid Time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Time</div>;
         }
+      },
+    },
+    {
+      accessorKey: "leadtime_picking",
+      header: "Leadtime Picking",
+      cell: ({ row }) => {
+        const value = row.getValue("leadtime_pick");
+        return <div className="text-right">{formatLeadtime(value as number | null)}</div>;
       },
     },
     {
@@ -525,21 +556,28 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
         }
       
         try {
-          // Ensure the value is a Date object
           if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
             const dateObject = new Date(timeValue)
 
             if (isNaN(dateObject.getTime())) {
               return <div>Invalid time</div>
             }
-                      
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+            return <div className="text-right">{formattedDateTime}</div>;
           }
 
-          return <div>Invalid time</div>
+          // If timeValue is of an unsupported type
+          return <div>Invalid Time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Time</div>;
@@ -558,7 +596,6 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
         }
       
         try {
-          // Ensure the value is a Date object
           if (typeof timeValue === "string" || typeof timeValue === "number" || timeValue instanceof Date) {
             const dateObject = new Date(timeValue)
 
@@ -566,17 +603,33 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
               return <div>Invalid time</div>
             }
 
-          // Extract hh:mm using built-in methods
-          const formattedTime = `${dateObject.getHours().toString().padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}`;
-      
-          return <div className="text-right">{formattedTime}</div>;
+            const formattedDateTime = `${dateObject.getFullYear()}-${(dateObject.getMonth() + 1)
+            .toString()
+            .padStart(2, "0")}-${dateObject.getDate().toString().padStart(2, "0")} ${dateObject
+            .getHours()
+            .toString()
+            .padStart(2, "0")}:${dateObject.getMinutes().toString().padStart(2, "0")}:${dateObject
+            .getSeconds()
+            .toString()
+            .padStart(2, "0")}`;
+    
+            return <div className="text-right">{formattedDateTime}</div>;
           }
-          
-          return <div>Invalid time</div>
+
+          // If timeValue is of an unsupported type
+          return <div>Invalid Time</div>
         } catch {
           // Handle invalid Date cases
           return <div>Invalid Time</div>;
         }
+      },
+    },
+    {
+      accessorKey: "leadtime_load",
+      header: "Leadtime Load",
+      cell: ({ row }) => {
+        const value = row.getValue("leadtime_load");
+        return <div className="text-right">{formatLeadtime(value as number | null)}</div>;
       },
     },
     {

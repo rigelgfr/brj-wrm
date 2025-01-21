@@ -5,27 +5,19 @@ import React, { useState, useEffect } from 'react';
 import Clock from '@/components/Clock';
 import { Card, CardContent } from "@/components/ui/card";
 import { TruckDataCard, VolumeDataCard, TruckTrendsChart, VolumeTrendsChart, OccupancyDonut, OccupancyVolumeChart, LatestInboundTable, LatestOutboundTable } from './data';
+import { MonthlyData, DashboardData } from './types';
 import Loading from '@/components/ui/Loading';
 
-interface DashboardData {
-    data: any[];
-    currentMonth: any;
-    occupancy: any;
-    latestInbounds: any[];
-    latestOutbounds: any[];
-}
-
-interface MonthlyData {
-    month: string;
-    inboundTrucks: number;
-    outboundTrucks: number;
-    inboundVolume: number;
-    outboundVolume: number;
-}
 const DashboardLayout: React.FC = () => {
     const [data, setData] = useState<DashboardData>({ 
       data: [], 
       currentMonth: {
+        inboundTrucks: 0,
+        outboundTrucks: 0,
+        inboundVolume: 0,
+        outboundVolume: 0
+      },
+      lastMonth: {
         inboundTrucks: 0,
         outboundTrucks: 0,
         inboundVolume: 0,
@@ -100,8 +92,8 @@ const DashboardLayout: React.FC = () => {
                         
     
 
-                <TruckDataCard currentMonth={data.currentMonth} />
-                <VolumeDataCard currentMonth={data.currentMonth} />
+                <TruckDataCard lastMonth={data.lastMonth} />
+                <VolumeDataCard lastMonth={data.lastMonth} />
 
                 <TruckTrendsChart 
                   data={data.data}

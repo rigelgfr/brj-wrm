@@ -52,6 +52,8 @@ export async function GET() {
         month: true,
         week_no: true,
         week_in_month: true,
+        leadtime_unload: true,
+        leadtime_put: true,
       },
     });
 
@@ -60,6 +62,8 @@ export async function GET() {
       nett_weight: item.nett_weight ? Number(item.nett_weight) : null,
       gross_weight: item.gross_weight ? Number(item.gross_weight) : null,
       volume: item.volume ? Number(item.volume) : null,
+      leadtime_unload: item.leadtime_unload ? Number(item.leadtime_unload) : null,
+      leadtime_put: item.leadtime_put ? Number(item.leadtime_put) : null,
     }));
 
     return NextResponse.json(formattedData);

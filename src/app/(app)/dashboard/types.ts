@@ -2,6 +2,7 @@
 export interface DashboardData {
   data: MonthlyData[];
   currentMonth: CurrentMonthData;
+  lastMonth: LastMonthData;
   occupancy: OccupancyData;
   latestInbounds: InboundRecord[];
   latestOutbounds: OutboundRecord[];
@@ -16,6 +17,13 @@ export interface MonthlyData {
 }
 
 export interface CurrentMonthData {
+  inboundTrucks: number;
+  outboundTrucks: number;
+  inboundVolume: number;
+  outboundVolume: number;
+}
+
+export interface LastMonthData {
   inboundTrucks: number;
   outboundTrucks: number;
   inboundVolume: number;
@@ -60,11 +68,11 @@ export interface OutboundRecord {
 
 // Props interfaces for components
 export interface TruckDataCardProps {
-  currentMonth: CurrentMonthData | undefined;
+  lastMonth: LastMonthData | undefined;
 }
 
 export interface VolumeDataCardProps {
-  currentMonth: CurrentMonthData | undefined;
+  lastMonth: LastMonthData | undefined;
 }
 
 export interface TrendChartProps {

@@ -1,5 +1,4 @@
 // (app)/dasboard/data.tsx
-
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -28,7 +27,7 @@ import {
   VolumeAccumulator,
 } from './types';
 
-export const TruckDataCard: React.FC<TruckDataCardProps> = ({ currentMonth }) => (
+export const TruckDataCard: React.FC<TruckDataCardProps> = ({ lastMonth }) => (
   <Card onClick={() => { console.log("Clicked") }}>
     <CardContent className="p-6">
       <div className="flex flex-col space-y-2">
@@ -38,11 +37,11 @@ export const TruckDataCard: React.FC<TruckDataCardProps> = ({ currentMonth }) =>
         </div>
         <div className='grid grid-cols-2'>
           <div className="flex items-baseline space-x-2 justify-center border-r">
-            <h3 className="text-2xl font-bold">{currentMonth?.inboundTrucks || 0}</h3>
+            <h3 className="text-2xl font-bold">{lastMonth?.inboundTrucks || 0}</h3>
             <span className="text-sm text-muted-foreground">in</span>
           </div>
           <div className="flex items-baseline space-x-2 justify-center border-l">
-            <h3 className="text-2xl font-bold">{currentMonth?.outboundTrucks || 0}</h3>
+            <h3 className="text-2xl font-bold">{lastMonth?.outboundTrucks || 0}</h3>
             <span className="text-sm text-muted-foreground">out</span>
           </div>
         </div>
@@ -51,7 +50,7 @@ export const TruckDataCard: React.FC<TruckDataCardProps> = ({ currentMonth }) =>
   </Card>
 );
 
-export const VolumeDataCard: React.FC<VolumeDataCardProps> = ({ currentMonth }) => (
+export const VolumeDataCard: React.FC<VolumeDataCardProps> = ({ lastMonth }) => (
   <Card>
     <CardContent className="p-6">
       <div className="flex flex-col space-y-2">
@@ -61,11 +60,11 @@ export const VolumeDataCard: React.FC<VolumeDataCardProps> = ({ currentMonth }) 
         </div>
         <div className='grid grid-cols-2 text-2xl'>
           <div className="flex items-baseline space-x-2 justify-center border-r">
-            <h3 className="font-bold">{currentMonth?.inboundVolume || 0}</h3>
+            <h3 className="font-bold">{lastMonth?.inboundVolume || 0}</h3>
             <span className="text-sm text-muted-foreground">in</span>
           </div>
           <div className="flex items-baseline space-x-2 justify-center border-l">
-            <h3 className="font-bold">{currentMonth?.outboundVolume || 0}</h3>
+            <h3 className="font-bold">{lastMonth?.outboundVolume || 0}</h3>
             <span className="text-sm text-muted-foreground">out</span>
           </div>
         </div>

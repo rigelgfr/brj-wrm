@@ -179,6 +179,12 @@ export async function GET() {
                 inboundVolume: Math.round(formattedResult[5]?.inboundVolume || 0),
                 outboundVolume: Math.round(formattedResult[5]?.outboundVolume || 0),
             },
+            lastMonth: {
+                inboundTrucks: formattedResult[4]?.inboundTrucks || 0,
+                outboundTrucks: formattedResult[4]?.outboundTrucks || 0,
+                inboundVolume: Math.round(formattedResult[4]?.inboundVolume || 0),
+                outboundVolume: Math.round(formattedResult[4]?.outboundVolume || 0),
+            },
             occupancy: occupancyData,
             latestInbounds,
             latestOutbounds

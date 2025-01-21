@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react';
+import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -37,6 +37,7 @@ const menuSections: MenuSection[] = [
       { icon: <Factory className="w-4 h-4" />, label: 'Operations', href: '/operations' },
       { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (SQM)', href: '/occupancy/sqm' },
       { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (VOL)', href: '/occupancy/vol' },
+      { icon: <Truck className='w-4 h-4' />, label: 'Trucks', href:'/truck'}
     ]
   },
   {
