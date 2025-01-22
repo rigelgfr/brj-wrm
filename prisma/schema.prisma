@@ -42,7 +42,7 @@ model warehouses {
 }
 
 model inbound {
-  no               Int         @id
+  no               Int         @id @default(autoincrement())
   wh_name          String?
   area             String?
   inbound_date     DateTime?   @db.Date
@@ -139,7 +139,7 @@ model occupancy_vol {
 }
 
 model outbound {
-  no                Int         @id
+  no                Int         @id @default(autoincrement())
   wh_name           String?
   area              String?
   outbound_date     DateTime?   @db.Date

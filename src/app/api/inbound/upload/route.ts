@@ -48,7 +48,7 @@ interface CSVRow {
 }
 
 interface ProcessedData {
-  no: number;
+  no?: number;
   wh_name: string;
   warehouses: {
     connect: {
@@ -170,75 +170,75 @@ const processTimestamp = (timestampStr: string | null | undefined): Date => {
   }
 };
 
-const processCSVData = (csvData: CSVRow[]): ProcessedData[] => {
+const processCSVData = (csvData: CSVRow[]): Omit<ProcessedData, 'no'>[] => {
   return csvData
-    // Filter out rows with empty AREA
     .filter(row => row['AREA'] && row['AREA'].trim() !== '')
-    .map(row => ({
-      // Primary key - convert to number
-      no: parseInt(row['NO'], 10) || 0,
-      
-      // String fields
-      wh_name: row['WH NAME'] || '',
+    .map(row => {
+      // Create the processed data object WITHOUT the 'no' field
+      const processedRow = {
+        wh_name: row['WH NAME'] || '',
+        warehouses: {
+          connect: {
+            wh_name: row['AREA'] || ''
+          }
+        },
+        inbound_doc_type: row['INBOUND DOC TYPE'] || '',
+        inbound_doc: row['INBOUND DOC'] || '',
+        receiving_doc: row['RECEIVING DOC'] || '',
+        customer_name: row['CUSTOMER NAME'] || '',
+        shipper_name: row['SHIPPER NAME'] || '',
+        bl_do: row['BL/DO'] || '',
+        aju_no: row['AJU NO'] || '',
+        truck_type: row['TRUCK TYPE'] || '',
+        plat_no: row['PLAT NO'] || '',
+        container_no: row['CONTAINER NO'] || '',
+        seal_no: row['SEAL NO'] || '',
+        item_code: row['ITEM CODE'] || '',
+        item_name: row['ITEM NAME'] || '',
+        uom: row['UOM'] || '',
+        batch: row['BATCH'] || '',
+        npe_no: row['NPE NO'] || '',
+        peb_no: row['PEB NO'] || '',
+        remark: row['REMARK'] || '',
+        dock_no: row['DOCK NO'] || '',
+        doc_status: row['DOC STATUS'] || '',
+        user_admin: row['USER ADMIN'] || '',
+        user_tally: row['USER TALLY'] || '',
+        user_putaway: row['USER PUTAWAY'] || '',
+        
+        // Numeric fields with comma handling
+        qty: parseInt(row['QTY'], 10) || 0,
+        nett_weight: processNumeric(row['NETT WEIGHT']),
+        gross_weight: processNumeric(row['GROSS WEIGHT']),
+        volume: processNumeric(row['VOLUME']),
+        
+        // Date fields - using specific format for inbound_date
+        inbound_date: processInboundDate(row['INBOUND DATE']),
+        npe_date: processDate(row['NPE DATE']),
+        peb_date: processDate(row['PEB DATE']),
+        
+        // Time field (converted to DateTime)
+        gate_in: processTime(row['GATE IN']),
+        
+        // Timestamp fields
+        start_tally: processTimestamp(row['START TALLY']),
+        finish_tally: processTimestamp(row['FINISH TALLY']),
+        start_putaway: processTimestamp(row['START PUTAWAY']),
+        finish_putaway: processTimestamp(row['FINISH PUTAWAY'])
+      };
 
-      warehouses: {
-        connect: {
-          wh_name: row['AREA'] || ''
-        }
-      },
-
-      inbound_doc_type: row['INBOUND DOC TYPE'] || '',
-      inbound_doc: row['INBOUND DOC'] || '',
-      receiving_doc: row['RECEIVING DOC'] || '',
-      customer_name: row['CUSTOMER NAME'] || '',
-      shipper_name: row['SHIPPER NAME'] || '',
-      bl_do: row['BL/DO'] || '',
-      aju_no: row['AJU NO'] || '',
-      truck_type: row['TRUCK TYPE'] || '',
-      plat_no: row['PLAT NO'] || '',
-      container_no: row['CONTAINER NO'] || '',
-      seal_no: row['SEAL NO'] || '',
-      item_code: row['ITEM CODE'] || '',
-      item_name: row['ITEM NAME'] || '',
-      uom: row['UOM'] || '',
-      batch: row['BATCH'] || '',
-      npe_no: row['NPE NO'] || '',
-      peb_no: row['PEB NO'] || '',
-      remark: row['REMARK'] || '',
-      dock_no: row['DOCK NO'] || '',
-      doc_status: row['DOC STATUS'] || '',
-      user_admin: row['USER ADMIN'] || '',
-      user_tally: row['USER TALLY'] || '',
-      user_putaway: row['USER PUTAWAY'] || '',
-      
-      // Numeric fields with comma handling
-      qty: parseInt(row['QTY'], 10) || 0,
-      nett_weight: processNumeric(row['NETT WEIGHT']),
-      gross_weight: processNumeric(row['GROSS WEIGHT']),
-      volume: processNumeric(row['VOLUME']),
-      
-      // Date fields - using specific format for inbound_date
-      inbound_date: processInboundDate(row['INBOUND DATE']),
-      npe_date: processDate(row['NPE DATE']),
-      peb_date: processDate(row['PEB DATE']),
-      
-      // Time field (converted to DateTime)
-      gate_in: processTime(row['GATE IN']),
-      
-      // Timestamp fields
-      start_tally: processTimestamp(row['START TALLY']),
-      finish_tally: processTimestamp(row['FINISH TALLY']),
-      start_putaway: processTimestamp(row['START PUTAWAY']),
-      finish_putaway: processTimestamp(row['FINISH PUTAWAY'])
-    }));
+      return processedRow;
+    });
 };
 
 const BATCH_SIZE = 100; // Adjust based on your needs
 
-async function processBatch(batch: ProcessedData[]) {
+async function processBatch(batch: Omit<ProcessedData, 'no'>[]) {
   return await prisma.$transaction(async (tx) => {
     const promises = batch.map(row => 
-      tx.inbound.create({ data: row })
+      tx.inbound.create({
+        data: row  // Now the data won't include 'no', triggering auto-increment
+      })
     );
     return await Promise.all(promises);
   });
