@@ -66,9 +66,9 @@ export default function SlidingMenu({ open, onOpenChange, session }: SlidingMenu
         </SheetHeader>
 
         {/* Navigation Sections */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {menuSections.map((section, index) => (
-            <div key={index} className="space-y-3">
+            <div key={index} className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground tracking-wider">
                 {section.title}
               </h3>

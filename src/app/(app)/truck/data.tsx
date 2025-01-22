@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 import {
   Table,
@@ -101,6 +102,9 @@ export const TruckCountChart = ({
     outbound: stats.outbound.count,
   }));
 
+  // Calculate max value with 10% padding
+  const maxValuePadded = Math.max(...chartData.map(entry => entry.total)) * 1.1;
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -115,9 +119,15 @@ export const TruckCountChart = ({
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis domain={[0, maxValuePadded]} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total" fill="#3b82f6" />
+              <Bar dataKey="total" fill="#94d454">
+                <LabelList
+                  dataKey="total"
+                  position="top"
+                  className="text-xs"
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

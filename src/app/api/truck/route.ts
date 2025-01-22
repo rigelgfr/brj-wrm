@@ -3,28 +3,46 @@ import { prisma } from "@/lib/prisma";
 
 // Helper function to standardize truck types
 function standardizeTruckType(type: string): string {
-  const normalized = type.toUpperCase().trim();
+  // Handle null, undefined, or empty strings
+  if (!type || type.trim() === '' || type === '""') return "Unknown";
   
-  if (!normalized) return "Unknown";
+  const normalized = type.toUpperCase().trim().replace(/['"]/g, '');
   
-  if (normalized.includes("WING") || normalized === "WB") return "Wing Box";
-  if (normalized.match(/40|40'|40FT|40HQ|40HC|40OT|40DRY/)) return "40ft";
-  if (normalized.match(/20|20'|20FT|20GP|20DRY/)) return "20ft";
-  if (normalized === "CDD") return "CDD";
-  if (normalized === "CDE") return "CDE";
-  if (normalized.includes("TRONTON")) return "Tronton";
-  if (normalized.includes("BOX")) return "Box";
-  if (normalized === "MOTOR") return "Motor";
-  if (normalized === "MOBIL") return "Mobil";
-  if (normalized.includes("FLAT")) return "Flatbed";
-  if (normalized === "FUSO") return "Fuso";
+  // Handle Wing Box variations
+  if (normalized.includes('WING') || normalized === 'WB' || normalized === 'WINGBOX') return "Wing Box";
   
+  // Handle 40ft variations
+  if (normalized.match(/^40|40'|40FT|40HQ|40HC|40OT|40DRY|40 HIGH|40 DRY|40FR|40DV|40 HC/)) return "40ft";
+  
+  // Handle 20ft variations
+  if (normalized.match(/^20|20'|20FT|20GP|20DRY|20 DRY|20 GP|20DC|20DV/)) return "20ft";
+  
+  // Handle specific truck types
+  if (normalized === 'CDD') return "CDD";
+  if (normalized === 'CDE') return "CDE";
+  if (normalized.includes('TRONTON')) return "Tronton";
+  if (normalized.includes('BOX')) return "Box";
+  if (normalized === 'MOTOR') return "Motor";
+  if (normalized === 'MOBIL') return "Mobil";
+  if (normalized.match(/FLAT|FLATBED/)) return "Flatbed";
+  if (normalized === 'FUSO') return "Fuso";
+  
+  // Handle any remaining unmatched patterns
   return "Unknown";
 }
 
 export async function GET() {
   try {
-    // Fetch inbound statistics
+    // First, let's get total counts to verify our data
+    const totalInbound = await prisma.$queryRaw<any[]>`
+      SELECT COUNT(*) as count FROM inbound
+    `;
+    
+    const totalOutbound = await prisma.$queryRaw<any[]>`
+      SELECT COUNT(*) as count FROM outbound
+    `;
+
+    // Fetch inbound statistics with raw counts
     const inboundStats = await prisma.$queryRaw<any[]>`
       SELECT 
         truck_type,
@@ -36,11 +54,10 @@ export async function GET() {
         MIN(leadtime_put) as min_putaway,
         MAX(leadtime_put) as max_putaway
       FROM inbound
-      WHERE truck_type IS NOT NULL
       GROUP BY truck_type
     `;
 
-    // Fetch outbound statistics
+    // Fetch outbound statistics with raw counts
     const outboundStats = await prisma.$queryRaw<any[]>`
       SELECT 
         truck_type,
@@ -52,11 +69,13 @@ export async function GET() {
         MIN(leadtime_load) as min_load,
         MAX(leadtime_load) as max_load
       FROM outbound
-      WHERE truck_type IS NOT NULL
       GROUP BY truck_type
     `;
 
-    // Initialize aggregated stats object
+    // Debug counters
+    let totalInboundProcessed = 0;
+    let totalOutboundProcessed = 0;
+    
     const aggregatedStats: Record<string, {
       total_count: number;
       inbound: {
@@ -74,6 +93,7 @@ export async function GET() {
     // Process inbound stats
     inboundStats.forEach((stat) => {
       const standardType = standardizeTruckType(stat.truck_type);
+      totalInboundProcessed += Number(stat.count);
       
       if (!aggregatedStats[standardType]) {
         aggregatedStats[standardType] = {
@@ -91,8 +111,8 @@ export async function GET() {
         };
       }
 
-      aggregatedStats[standardType].total_count += Number(stat.count);
-      aggregatedStats[standardType].inbound.count = Number(stat.count);
+      // Add to existing count instead of overwriting
+      aggregatedStats[standardType].inbound.count += Number(stat.count);
       aggregatedStats[standardType].inbound.unload = {
         avg: Number(stat.avg_unload) || 0,
         min: Number(stat.min_unload) || 0,
@@ -108,6 +128,7 @@ export async function GET() {
     // Process outbound stats
     outboundStats.forEach((stat) => {
       const standardType = standardizeTruckType(stat.truck_type);
+      totalOutboundProcessed += Number(stat.count);
       
       if (!aggregatedStats[standardType]) {
         aggregatedStats[standardType] = {
@@ -125,8 +146,8 @@ export async function GET() {
         };
       }
 
-      aggregatedStats[standardType].total_count += Number(stat.count);
-      aggregatedStats[standardType].outbound.count = Number(stat.count);
+      // Add to existing count instead of overwriting
+      aggregatedStats[standardType].outbound.count += Number(stat.count);
       aggregatedStats[standardType].outbound.picking = {
         avg: Number(stat.avg_picking) || 0,
         min: Number(stat.min_picking) || 0,
@@ -139,8 +160,22 @@ export async function GET() {
       };
     });
 
+    // Calculate total_count after processing both inbound and outbound
+    Object.keys(aggregatedStats).forEach((type) => {
+      aggregatedStats[type].total_count = 
+        aggregatedStats[type].inbound.count + 
+        aggregatedStats[type].outbound.count;
+    });
+
+    // Include debug information in the response
     return NextResponse.json({
       success: true,
+      debug: {
+        rawTotalInbound: Number(totalInbound[0].count),
+        rawTotalOutbound: Number(totalOutbound[0].count),
+        processedTotalInbound: totalInboundProcessed,
+        processedTotalOutbound: totalOutboundProcessed,
+      },
       data: aggregatedStats
     });
 
