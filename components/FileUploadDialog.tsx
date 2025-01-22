@@ -7,33 +7,50 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface FileUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRefresh?: () => void;
-  isInbound?: boolean;
+  title?: string;
+  description?: string;
+  acceptedFileTypes?: string;
+  uploadEndpoint: string;
+  fileTypeName?: string;
 }
 
 const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   open,
   onOpenChange,
   onRefresh,
-  isInbound
+  title = "Upload File",
+  description = "Upload a file to the system.",
+  acceptedFileTypes = "*",
+  uploadEndpoint,
+  fileTypeName = "file"
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string>('');
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (selectedFile.type !== 'text/csv') {
-        setError('Please select a CSV file');
-        return;
+      
+      if (acceptedFileTypes !== "*") {
+        const fileTypes = acceptedFileTypes.split(",");
+        const fileExtension = selectedFile.name.split('.').pop()?.toLowerCase();
+        if (!fileTypes.includes(`.${fileExtension}`)) {
+          setError(`Please select a valid ${fileTypeName}`);
+          return;
+        }
       }
+      
       setFile(selectedFile);
       setError(null);
+      setStatus('');
     }
   };
 
@@ -42,29 +59,36 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
 
     setUploading(true);
     setError(null);
+    setStatus('Starting upload...');
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const endpoint = isInbound ? '/api/inbound/upload' : '/api/outbound/upload';
-      const response = await fetch(endpoint, {
+      const response = await fetch(uploadEndpoint, {
         method: 'POST',
         body: formData,
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        throw new Error(data.error || data.details || 'Upload failed');
       }
 
-      // Close dialog and refresh table
-      onOpenChange(false);
-      if (onRefresh) {
-        onRefresh();
-      }
+      setStatus('Upload completed successfully!');
+      
+      // Close dialog and refresh after a brief delay to show success message
+      setTimeout(() => {
+        onOpenChange(false);
+        if (onRefresh) {
+          onRefresh();
+        }
+      }, 1500);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload file');
+      setStatus('');
     } finally {
       setUploading(false);
     }
@@ -74,17 +98,14 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload CSV File</DialogTitle>
-          <DialogDescription>
-            Upload a CSV file containing {isInbound ? 'inbound' : 'outbound'} data. 
-            Make sure it follows the required format.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
           <div className="flex flex-col gap-2">
             <input
               type="file"
-              accept=".csv"
+              accept={acceptedFileTypes}
               onChange={handleFileSelect}
               className="block w-full text-sm text-gray-500
                 file:mr-4 file:py-2 file:px-4
@@ -93,12 +114,18 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
                 file:bg-green-50 file:text-green-krnd
                 hover:file:bg-green-100"
             />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
+            {status && (
+              <p className="text-green-600 text-sm">{status}</p>
+            )}
           </div>
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={uploading}
             >
               Cancel
             </Button>
@@ -107,7 +134,14 @@ const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
               disabled={!file || uploading}
               className="bg-green-krnd"
             >
-              {uploading ? 'Uploading...' : 'Upload'}
+              {uploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                'Upload'
+              )}
             </Button>
           </div>
         </div>

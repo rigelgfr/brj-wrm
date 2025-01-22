@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck } from 'lucide-react';
+import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -46,6 +46,7 @@ const menuSections: MenuSection[] = [
       { icon: <ArrowDownToLine className="w-4 h-4" />, label: 'Inbound', href: '/inbound' },
       { icon: <ArrowUpFromLine className="w-4 h-4" />, label: 'Outbound', href: '/outbound' },
       { icon: <Database className="w-4 h-4" />, label: 'Inventory', href: '/inventory' },
+      { icon: <Save className='w-4 h-4' />, label: 'Backup/Restore DB', href: '/backup' },
     ]
   }
 ];
@@ -58,46 +59,53 @@ export default function SlidingMenu({ open, onOpenChange, session }: SlidingMenu
       <SheetTrigger></SheetTrigger>
       <SheetContent
         side="right"
-        className='w-[300px]'
+        className="w-[300px] flex flex-col h-full p-0"
       >
-        <SheetHeader className="mb-6">
-          <SheetTitle>{session.user?.name}</SheetTitle>
-          <p className="text-sm text-muted-foreground">{session.user?.email}</p>
-        </SheetHeader>
-
-        {/* Navigation Sections */}
-        <div className="space-y-4">
-          {menuSections.map((section, index) => (
-            <div key={index} className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground tracking-wider">
-                {section.title}
-              </h3>
-              <nav className="space-y-1">
-                {section.items.map((item, itemIndex) => (
-                  <a
-                    key={itemIndex}
-                    href={item.href}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                    onClick={() => onOpenChange(false)}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          ))}
+        {/* Header Section - Fixed */}
+        <div className="p-6 border-b">
+          <SheetHeader className="mb-0">
+            <SheetTitle className="text-darkgrey-krnd">{session.user?.name}</SheetTitle>
+            <p className="text-sm text-muted-foreground">{session.user?.email}</p>
+          </SheetHeader>
         </div>
 
-        {/* Sign Out Button */}
-        <Button
-          variant="ghost"
-          className="w-full mt-6 flex items-center gap-2 bg-red-500 hover:bg-red-600 hover:text-white text-white"
-          onClick={() => signOut()}
-        >
-          <LogOut className="w-4 h-4" />
-          Sign Out
-        </Button>
+        {/* Scrollable Content Section */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
+            {menuSections.map((section, index) => (
+              <div key={index} className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground tracking-wider">
+                  {section.title}
+                </h3>
+                <nav className="space-y-1">
+                  {section.items.map((item, itemIndex) => (
+                    <a
+                      key={itemIndex}
+                      href={item.href}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                      onClick={() => onOpenChange(false)}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </a>
+                  ))}
+                </nav>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer Section - Fixed */}
+        <div className="p-6 border-t mt-auto">
+          <Button
+            variant="ghost"
+            className="w-full flex items-center gap-2 bg-red-500 hover:bg-red-600 hover:text-white text-white"
+            onClick={() => signOut()}
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   );

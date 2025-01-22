@@ -5,6 +5,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Inbound, columns } from "./columns";
 import { DataTable } from "@/components/DataTable";
 import Loading from "@/components/ui/Loading";
+import Heading from "@/components/ui/Heading";
+import { ArrowDownToLine } from "lucide-react";
 
 export default function InboundPage() {
   const [data, setData] = useState<Inbound[]>([]);
@@ -46,9 +48,7 @@ export default function InboundPage() {
 
   return (
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
-      <div className="flex-none">
-        <p className="text-xl font-bold text-green-krnd">Inbound</p>
-      </div>
+      <Heading text="Inbound" Icon={ArrowDownToLine} />
         {isLoading ? (
           <div className="w-full h-[75vh] flex justify-center items-center">
             <Loading />

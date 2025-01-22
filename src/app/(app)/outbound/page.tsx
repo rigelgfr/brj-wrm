@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Outbound, columns } from "./columns";
 import { DataTable } from "@/components/DataTable";
 import Loading from "@/components/ui/Loading";
+import Heading from "@/components/ui/Heading";
+import { ArrowDownToLine } from "lucide-react";
 
 export default function OutboundPage() {
   const [data, setData] = useState<Outbound[]>([]);
@@ -45,9 +47,7 @@ export default function OutboundPage() {
 
   return (
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
-      <div className="flex-none">
-        <p className="text-xl font-bold text-green-krnd">Outbound</p>
-      </div>
+      <Heading text="Outbound" Icon={ArrowDownToLine} />
       <div className="flex-1 min-h-0">
         {isLoading ? (
           <div className="w-full h-[75vh] flex justify-center items-center">

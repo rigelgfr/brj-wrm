@@ -138,7 +138,11 @@ export function DataTable<TData, TValue>({
           open={showUploadDialog}
           onOpenChange={setShowUploadDialog}
           onRefresh={onRefresh}
-          isInbound={isInbound === true ? true : false}
+          title="Upload CSV"
+          description={`Upload a CSV file containing ${isInbound ? 'inbound' : 'outbound'} data. Make sure it follows the required format.`}
+          acceptedFileTypes=".csv"
+          uploadEndpoint={isInbound ? "/api/inbound/upload" : "/api/outbound/upload"}
+          fileTypeName="CSV file"
         />
       )}
 
