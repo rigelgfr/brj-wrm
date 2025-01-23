@@ -102,6 +102,11 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
         }),
       });
 
+      console.log('Submitting data:', {
+        no: row.original.no,
+        user_putaway: data.user_putaway
+      });
+
       if (!response.ok) {
         throw new Error('Failed to update record');
       }

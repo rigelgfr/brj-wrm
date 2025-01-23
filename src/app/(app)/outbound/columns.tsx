@@ -536,7 +536,7 @@ export const columns: ColumnDefWithMeta<Outbound>[] = [
       accessorKey: "leadtime_picking",
       header: "Leadtime Picking",
       cell: ({ row }) => {
-        const value = row.getValue("leadtime_pick");
+        const value = row.getValue("leadtime_picking");
         return <div className="text-right">{formatLeadtime(value as number | null)}</div>;
       },
     },
