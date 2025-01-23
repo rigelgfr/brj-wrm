@@ -52,7 +52,7 @@ interface CSVRow {
 }
 
 interface ProcessedData {
-  no: number;
+  no?: number;
   wh_name: string;
   warehouses: {
     connect: {
@@ -180,79 +180,79 @@ const processTimestamp = (timestampStr: string | null | undefined): Date => {
   }
 };
 
-const processCSVData = (csvData: CSVRow[]): ProcessedData[] => {
+const processCSVData = (csvData: CSVRow[]): Omit<ProcessedData, 'no'>[] => {
   return csvData
     // Filter out rows with empty AREA
     .filter(row => row['AREA'] && row['AREA'].trim() !== '')
-    .map(row => ({
-      // Primary key - convert to number
-      no: parseInt(row['NO'], 10) || 0,
-      
-      // String fields
-      wh_name: row['WH NAME'] || '',
+    .map(row => {    
+      // Create the processed data object WITHOUT the 'no' field
+      const processedRow = {
+          wh_name: row['WH NAME'] || '',
+          warehouses: {
+            connect: {
+              wh_name: row['AREA'] || ''
+            }
+          },
+          outbound_doc_type: row['OUTBOUND DOC TYPE'] || '',
+          outbound_doc: row['OUTBOUND DOC'] || '',
+          picking_doc: row['PICKING DOC'] || '',
+          loading_doc: row['LOADING DOC'] || '',
+          customer_name: row['CUSTOMER NAME'] || '',
+          shipper_name: row['SHIPPER NAME'] || '',
+          item_code: row['ITEM CODE'] || '',
+          item_name: row['ITEM NAME'] || '',
+          uom: row['UOM'] || '',
+          batch: row['BATCH'] || '',
+          bl_do: row['BL/DO'] || '',
+          aju_no: row['AJU NO'] || '',
+          truck_type: row['TRUCK TYPE'] || '',
+          truck_no: row['TRUCK NO'] || '',
+          container_no: row['CONTAINER NO'] || '',
+          seal_no: row['SEAL NO'] || '',
+          vessel_name: row['VESSEL NAME'] || '',
+          voyage_no: row['VOYAGE NO'] || '',
+          destination: row['DESTINATION'] || '',
+          recipient: row['RECIPIENT'] || '',
+          shipping_notes: row['SHIPPING NOTES'] || '',
+          remark: row['REMARK'] || '',
+          doc_status: row['DOC STATUS'] || '',
+          user_admin: row['USER ADMIN'] || '',
+          user_picking: row['USER PICKING'] || '',
+          user_loading: row['USER LOADING'] || '',
+          
+          // Numeric fields with comma handling
+          doc_qty: parseInt(row['DOC QTY'], 10) || 0,
+          qty: parseInt(row['QTY'], 10) || 0,
+          nett_weight: processNumeric(row['NETT WEIGHT']),
+          gross_weight: processNumeric(row['GROSS WEIGHT']),
+          volume: processNumeric(row['VOLUME']),
+          
+          // Date fields - using specific format for inbound_date
+          outbound_date: processOutboundDate(row['OUTBOUND DATE']),
+          loading_date: processDate(row['LOADING DATE']),
+          
+          // Time field (converted to DateTime)
+          outbound_time: processTime(row['OUTBOUND_TIME']),
+          
+          // Timestamp fields
+          start_picking: processTimestamp(row['START PICKING']),
+          finish_picking: processTimestamp(row['FINISH PICKING']),
+          start_loading: processTimestamp(row['START LOADING']),
+          finish_loading: processTimestamp(row['FINISH LOADING'])
+      };
 
-       // Remove the direct area field and add the relation
-       warehouses: {
-        connect: {
-          wh_name: row['AREA'] || ''
-        }
-      },
-
-      outbound_doc_type: row['OUTBOUND DOC TYPE'] || '',
-      outbound_doc: row['OUTBOUND DOC'] || '',
-      picking_doc: row['PICKING DOC'] || '',
-      loading_doc: row['LOADING DOC'] || '',
-      customer_name: row['CUSTOMER NAME'] || '',
-      shipper_name: row['SHIPPER NAME'] || '',
-      item_code: row['ITEM CODE'] || '',
-      item_name: row['ITEM NAME'] || '',
-      uom: row['UOM'] || '',
-      batch: row['BATCH'] || '',
-      bl_do: row['BL/DO'] || '',
-      aju_no: row['AJU NO'] || '',
-      truck_type: row['TRUCK TYPE'] || '',
-      truck_no: row['TRUCK NO'] || '',
-      container_no: row['CONTAINER NO'] || '',
-      seal_no: row['SEAL NO'] || '',
-      vessel_name: row['VESSEL NAME'] || '',
-      voyage_no: row['VOYAGE NO'] || '',
-      destination: row['DESTINATION'] || '',
-      recipient: row['RECIPIENT'] || '',
-      shipping_notes: row['SHIPPING NOTES'] || '',
-      remark: row['REMARK'] || '',
-      doc_status: row['DOC STATUS'] || '',
-      user_admin: row['USER ADMIN'] || '',
-      user_picking: row['USER PICKING'] || '',
-      user_loading: row['USER LOADING'] || '',
-      
-      // Numeric fields with comma handling
-      doc_qty: parseInt(row['DOC QTY'], 10) || 0,
-      qty: parseInt(row['QTY'], 10) || 0,
-      nett_weight: processNumeric(row['NETT WEIGHT']),
-      gross_weight: processNumeric(row['GROSS WEIGHT']),
-      volume: processNumeric(row['VOLUME']),
-      
-      // Date fields - using specific format for inbound_date
-      outbound_date: processOutboundDate(row['OUTBOUND DATE']),
-      loading_date: processDate(row['LOADING DATE']),
-      
-      // Time field (converted to DateTime)
-      outbound_time: processTime(row['OUTBOUND_TIME']),
-      
-      // Timestamp fields
-      start_picking: processTimestamp(row['START PICKING']),
-      finish_picking: processTimestamp(row['FINISH PICKING']),
-      start_loading: processTimestamp(row['START LOADING']),
-      finish_loading: processTimestamp(row['FINISH LOADING'])
-    }));
+      return processedRow;
+    });
 };
 
 const BATCH_SIZE = 100; // Adjust based on your needs
 
-async function processBatch(batch: ProcessedData[]) {
+async function processBatch(batch: Omit<ProcessedData, 'no'>[]) {
   return await prisma.$transaction(async (tx) => {
     const promises = batch.map(row => 
-      tx.outbound.create({ data: row })
+      tx.outbound.create({
+        data: row  // Now the data won't include 'no', triggering auto-increment
+      })
     );
     return await Promise.all(promises);
   });
