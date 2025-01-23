@@ -89,6 +89,12 @@ export function OccupancySqmData() {
 
   if (!isHydrated) return null;
 
+  // Get occupied space for the selected week
+  const getOccupiedSpace = (warehouse: string) => {
+    return occupancyData[warehouse]?.occupied || 0;
+  };
+  
+
   const warehouseOrder = ['CFS', 'FZ BRJ', 'FZ AB', 'Bonded', 'PLB'];
 
   return (
@@ -109,16 +115,29 @@ export function OccupancySqmData() {
                       <th className="p-2 text-left font-medium">WH Type</th>
                       <th className="p-2 text-right font-medium">Space</th>
                       <th className="p-2 text-right font-medium">Max Cap (sqm)</th>
+                      <th className="p-2 text-right font-medium">Occupied</th>
+                      <th className="p-2 text-right font-medium">%</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {spaceData.map((warehouse) => (
-                      <tr key={warehouse.wh_type} className="border-b">
+                    {spaceData.map((warehouse) => {
+                       const occupiedSpace = getOccupiedSpace(warehouse.wh_type || '');
+                       const maxCapacity = warehouse.max_cap_sqm || 0;
+                       const occupancyPercentage = maxCapacity > 0 
+                         ? ((occupiedSpace / maxCapacity) * 100).toFixed(1)
+                         : '-';
+
+                       return (
+                         <tr key={warehouse.wh_type} className="border-b">
                         <td className="p-2 text-left">{warehouse.wh_type || '-'}</td>
                         <td className="p-2 text-right">{warehouse.space?.toLocaleString() || '-'}</td>
                         <td className="p-2 text-right">{warehouse.max_cap_sqm?.toLocaleString() || '-'}</td>
+                        <td className="p-2 text-right">{occupiedSpace.toLocaleString() || '-'}</td>
+                        <td className="p-2 text-right">{occupancyPercentage}%</td>
                       </tr>
-                    ))}
+                       )
+                      
+                })}
                   </tbody>
                 </table>
               </div>

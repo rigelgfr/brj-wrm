@@ -9,7 +9,7 @@ export default function OccupancySqmPage() {
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
       <Heading text="Occupancy (sqm)" Icon={SquareStack} />
 
-      <div className="container mx-auto">
+      <div>
         <OccupancySqmData />
       </div>
 

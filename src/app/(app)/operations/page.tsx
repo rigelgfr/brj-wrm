@@ -9,7 +9,7 @@ export default function OperationsPage() {
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
       <Heading text="Operations" Icon={Factory} />
 
-      <div className="container mx-auto">
+      <div>
         <OperationsData />
       </div>
 

@@ -9,7 +9,7 @@ export default function OccupancyVolPage() {
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
       <Heading text="Occupancy (vol)" Icon={SquareStack} />
 
-      <div className="container mx-auto">
+      <div>
         <OccupancyVolData />
       </div>
     </div>

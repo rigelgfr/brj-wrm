@@ -117,7 +117,7 @@ const EditDialog = <TData extends Record<string, ColumnValue>>({
     
     const commonProps = {
       value,
-      onChange: (newDate: Date | undefined) => handleInputChange(accessorKey, newDate),
+      onChange: (newDate: Date | undefined) => handleInputChange(accessorKey, newDate ?? null),
       clearable: true,
       classNames: {
         trigger: 'w-full'

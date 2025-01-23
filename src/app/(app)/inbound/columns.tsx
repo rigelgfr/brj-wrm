@@ -280,7 +280,18 @@ export const columns: ColumnDefWithMeta<Inbound>[] = [
     },
     {
       accessorKey: "gate_in",
-      header: "Gate In",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-2"
+          >
+            Gate In
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const timeValue = row.getValue("gate_in"); // Expected to be a Date object or null
       
