@@ -13,9 +13,10 @@ function standardizeTruckType(type: string): string {
   
   // Handle 40ft variations
   if (normalized.match(/^40|40'|40FT|40HQ|40HC|40OT|40DRY|40 HIGH|40 DRY|40FR|40DV|40 HC/)) return "40ft";
+  if (normalized.includes('40') || normalized.includes('45')) return "40ft";
   
   // Handle 20ft variations
-  if (normalized.match(/^20|20'|20FT|20GP|20DRY|20 DRY|20 GP|20DC|20DV/)) return "20ft";
+  if (normalized.match(/^20|20'|20FT|20GP|20DRY|20 DRY|20 GP|20DC|20DV|20OT/)) return "20ft";
   
   // Handle specific truck types
   if (normalized === 'CDD') return "CDD";

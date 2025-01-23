@@ -33,8 +33,8 @@ async function main() {
     where: { email: 'test@example.com' },
     update: {},
     create: {
-      email: 'test2@example.com',
-      username: 'rigel',
+      email: 'test@test.com',
+      username: 'brj',
       password: hashedPassword,
       roleId: AdminRole.id
     }

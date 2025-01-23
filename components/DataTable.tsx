@@ -28,6 +28,9 @@ import { Input } from "@/components/ui/input"
 import FileUploadDialog from './FileUploadDialog';
 import { Upload } from "lucide-react"
 
+import "react-date-range/dist/styles.css"; // Main style file
+import "react-date-range/dist/theme/default.css"; // Theme CSS file
+
 // Define the filter configuration type
 interface FilterConfig {
   id: string
@@ -146,7 +149,7 @@ export function DataTable<TData, TValue>({
         />
       )}
 
-<div className="rounded-md border h-full">
+    <div className="rounded-md border h-full">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
