@@ -40,7 +40,7 @@ const EDITABLE_COLUMNS = [
   "user_tally",
   "start_putaway",
   "finish_putaway",
-  "user_loading",
+  "user_putaway",
 ] as const;
 
 type EditableColumn = typeof EDITABLE_COLUMNS[number];
@@ -117,6 +117,9 @@ export async function PATCH(req: Request) {
         volume: true
       }
     });
+
+    console.log('Unfiltered input:', body);
+    console.log('Filtered data:', filteredUpdateData);
 
     try {
       const result = await updateInboundAggregates();
