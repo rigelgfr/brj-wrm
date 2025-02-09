@@ -7,17 +7,48 @@ import { DataTable } from "@/components/DataTable";
 import Loading from "@/components/ui/Loading";
 import Heading from "@/components/ui/Heading";
 import { ArrowDownToLine } from "lucide-react";
+import { FilterConfig } from "@/components/types";
 
 export default function InboundPage() {
   const [data, setData] = useState<Inbound[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const inboundOutboundFilters = [
-    { id: "area", placeholder: "Filter warehouse..." },
-    { id: "customer_name", placeholder: "Filter customer..." },
-    { id: "shipper_name", placeholder: "Filter shipper..." },
-    { id: "item_name", placeholder: "Filter item..." },
+  // In your page.tsx, update the filters configuration:
+  const inboundOutboundFilters: FilterConfig[] = [
+    { 
+      id: "area", 
+      placeholder: "Filter warehouse...", 
+      type: 'select',
+      options: [
+        { value: 'CFS', label: 'CFS' },
+        { value: 'FREEZONE AB', label: 'FZ AB' },
+        { value: 'FREEZONE BRJ', label: 'FZ BRJ' },
+        { value: 'GB', label: 'BONDED' },
+        { value: 'PLB', label: 'PLB' },
+      ],
+      isPrimary: true 
+    },
+    { 
+      id: "customer_name", 
+      placeholder: "Filter customer...",
+      type: 'text',
+    },
+    { 
+      id: "shipper_name", 
+      placeholder: "Filter shipper...",
+      type: 'text',
+    },
+    { 
+      id: "item_name", 
+      placeholder: "Filter item...",
+      type: 'text',
+    },
+    { 
+      id: "inbound_date", 
+      placeholder: "Filter date...",
+      type: 'text',
+    },
   ];
 
   // Fetch inbound data on component mount

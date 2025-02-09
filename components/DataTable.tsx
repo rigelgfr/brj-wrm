@@ -27,13 +27,18 @@ import { Button } from "./ui/button"
 import { Input } from "@/components/ui/input"
 import FileUploadDialog from './FileUploadDialog';
 import { Upload } from "lucide-react"
+import { DataTableFilter } from "./DataTableFilter"
 
 // Define the filter configuration type
 interface FilterConfig {
   id: string
   placeholder: string
   width?: string
+  type?: 'text' | 'select'
+  options?: { value: string; label: string }[]
+  isPrimary?: boolean
 }
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -96,36 +101,22 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        {filters.length > 0 && (
-          <div className="flex space-x-2">
-            {filters.map((filter) => (
-              <Input
-                key={filter.id}
-                placeholder={filter.placeholder}
-                value={(table.getColumn(filter.id)?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn(filter.id)?.setFilterValue(event.target.value)
-                }
-                className={filter.width ? filter.width : "w-1/6"}
-              />
-            ))}
-            <Button
-              onClick={resetFiltersAndSorting}
-              variant="outline"
-              size="default"
-              className="text-darkgrey-krnd"
-            >
-              Reset
-            </Button>
-          </div>
-        )}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex-1">
+          {filters.length > 0 && (
+            <DataTableFilter
+              table={table}
+              filters={filters}
+              onReset={resetFiltersAndSorting}
+            />
+          )}
+        </div>
         {showUpload && (
           <Button
             onClick={() => setShowUploadDialog(true)}
             variant="default"
             size="default"
-            className="bg-green-krnd hover:bg-[#659c37] px-2"
+            className="bg-green-krnd hover:bg-[#659c37] px-2 ml-4"
           >
             <Upload />
             Upload CSV
