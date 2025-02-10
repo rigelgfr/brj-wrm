@@ -19,7 +19,7 @@ export default function InboundPage() {
     { 
       id: "area", 
       placeholder: "Filter warehouse...", 
-      type: 'select',
+      type: 'multiSelect',
       options: [
         { value: 'CFS', label: 'CFS' },
         { value: 'FREEZONE AB', label: 'FZ AB' },
@@ -28,6 +28,12 @@ export default function InboundPage() {
         { value: 'PLB', label: 'PLB' },
       ],
       isPrimary: true 
+    },
+    {
+      id: "inbound_date",
+      placeholder: "Date range...",
+      type: 'dateRange',
+      isPrimary: true,
     },
     { 
       id: "customer_name", 
@@ -42,11 +48,6 @@ export default function InboundPage() {
     { 
       id: "item_name", 
       placeholder: "Filter item...",
-      type: 'text',
-    },
-    { 
-      id: "inbound_date", 
-      placeholder: "Filter date...",
       type: 'text',
     },
   ];

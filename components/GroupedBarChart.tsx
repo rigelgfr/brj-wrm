@@ -82,18 +82,19 @@ const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
         <CardTitle className="text-darkgrey-krnd">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[340px]">
+        <div className="h-[340px] -mt-6">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={transformedData}
               margin={{ top: 20, right: 10, left: 10, bottom: 40 }}
+              barGap={2}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="name"
                 interval={0}
                 tick={{ fontSize: 12 }}
-                dy={20}
+                dy={0}
               />
               <YAxis hide domain={[0, maxValuePadded]} />
               <Tooltip />
@@ -102,19 +103,47 @@ const GroupedBarChart = ({ data, weeks, title }: GroupedBarChartProps) => {
                   key={`W${index + 1}`}
                   dataKey={`W${index + 1}`}
                   fill={COLORS[index % COLORS.length]}
-                  barSize={20}
+                  barSize={18}
                 >
                   <LabelList content={CustomBarLabel} />
-                  <LabelList
-                    dataKey={`weekLabel${index + 1}`}
-                    position="bottom"
-                    offset={10}
-                    className="text-xs"
-                  />
                 </Bar>
               ))}
             </BarChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* Legend Table */}
+        <div className="overflow-x-auto -mt-12">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="py-2 px-4 text-left font-medium text-lightgrey-krnd"></th>
+                {sortedData.map((warehouse) => (
+                  <th key={warehouse.warehouse} className="py-2 px-4 text-right font-medium text-lightgrey-krnd">
+                    {warehouse.warehouse}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedWeeks.map((week, index) => (
+                <tr key={week} className="border-b">
+                  <td className="py-1 px-4 text-left flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4" 
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    W{week.slice(1)}
+                  </td>
+                  {sortedData.map((warehouse) => (
+                    <td key={`${week}-${warehouse.warehouse}`} className="py-1 px-4 text-right">
+                      {warehouse[week] || '-'}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </CardContent>
     </Card>

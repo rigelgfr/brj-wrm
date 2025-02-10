@@ -257,6 +257,11 @@ export const columns: ColumnDefWithMeta<Inbound>[] = [
       accessorKey: "area",
       header: "WH Type",
       cell: ({ row }) => <div className="text-center">{row.getValue("area")}</div>,
+      filterFn: (row, id, filterValues: string[]) => {
+        if (!filterValues?.length) return true;
+        const rowValue = row.getValue(id) as string;
+        return filterValues.includes(rowValue);
+      }
     },
     {
       accessorKey: "inbound_date",
@@ -277,6 +282,25 @@ export const columns: ColumnDefWithMeta<Inbound>[] = [
         const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }); // Format date as desired
         return <div className="text-right">{formattedDate}</div>;
       },
+      filterFn: (row, id, value: { from: Date, to: Date }) => {
+        if (!value.from && !value.to) return true;
+        
+        const rowDate = new Date(row.getValue(id));
+        
+        if (value.from && value.to) {
+          return rowDate >= value.from && rowDate <= value.to;
+        }
+        
+        if (value.from) {
+          return rowDate >= value.from;
+        }
+        
+        if (value.to) {
+          return rowDate <= value.to;
+        }
+        
+        return true;
+      }
     },
     {
       accessorKey: "gate_in",

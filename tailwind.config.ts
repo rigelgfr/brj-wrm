@@ -15,6 +15,7 @@ const config: Config = {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			'green-krnd': '#7EAF45',
+			'green-krnd-hover': '#659c37',
   			'lightgrey-krnd': '#848484',
   			'darkgrey-krnd': '#323033',
 			'green-fade': '#d3e8ba',

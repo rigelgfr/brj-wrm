@@ -1,5 +1,5 @@
 // First, let's create a separate types file (types.ts)
-export type FilterType = 'text' | 'select';
+export type FilterType = 'text' | 'select' | 'multiSelect' | 'dateRange';
 
 export interface FilterOption {
   value: string;

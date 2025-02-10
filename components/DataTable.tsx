@@ -24,21 +24,12 @@ import {
 } from "@/components/ui/table"
 
 import { Button } from "./ui/button"
-import { Input } from "@/components/ui/input"
 import FileUploadDialog from './FileUploadDialog';
 import { Upload } from "lucide-react"
 import { DataTableFilter } from "./DataTableFilter"
+import { FilterConfig } from "./types"
 
 // Define the filter configuration type
-interface FilterConfig {
-  id: string
-  placeholder: string
-  width?: string
-  type?: 'text' | 'select'
-  options?: { value: string; label: string }[]
-  isPrimary?: boolean
-}
-
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -116,7 +107,7 @@ export function DataTable<TData, TValue>({
             onClick={() => setShowUploadDialog(true)}
             variant="default"
             size="default"
-            className="bg-green-krnd hover:bg-[#659c37] px-2 ml-4"
+            className="bg-green-krnd hover:bg-green-krnd-hover px-2 ml-4"
           >
             <Upload />
             Upload CSV

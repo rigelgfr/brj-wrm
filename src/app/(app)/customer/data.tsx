@@ -292,8 +292,8 @@ export function TrendTable() {
       <div className="w-full">
         <Table>
           <TableHeader>
-            <TableRow className="bg-lightgreen-header hover:bg-lightgreen">
-              <TableHead colSpan={2} className="text-left">
+            <TableRow className="bg-lightgreen-header hover:bg-lightgreen h-2 py-0">
+              <TableHead colSpan={2} className="text-left h-2! py-0">
                 {dataType === 'inbound' ? (
                   'Sum of Received CBM'
                 ) : (
@@ -302,22 +302,22 @@ export function TrendTable() {
               </TableHead>
               {/* Blank cells for previous months */}
               {prevMonths.map(month => (
-                <TableHead key={`group-${month}`} />
+                <TableHead key={`group-${month}`} className="h-4 py-0"/>
               ))}
               {/* Week of Month spanning all week columns */}
-              <TableHead colSpan={weekColumns.length} className="text-center">
+              <TableHead colSpan={weekColumns.length} className="text-center h-4 py-0 ">
                 Week of Month
               </TableHead>
               {/* Blank cell for grand total */}
               <TableHead />
             </TableRow>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-t-0">
+              <TableRow key={headerGroup.id} className="border-t-0 h-4">
                 {headerGroup.headers.map((header) => (
                   <TableHead 
                     key={header.id} 
                     style={{ width: header.getSize() }}
-                    className={`py-1 ${header.id.includes('W') || header.id === 'grandTotal' ? 'text-right' : ''} bg-lightgreen-header text-darkgrey-krnd`}
+                    className={`h-2 py-0.5 ${header.id.includes('W') || header.id === 'grandTotal' ? 'text-right' : ''} bg-lightgreen-header text-darkgrey-krnd`}
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -341,7 +341,7 @@ export function TrendTable() {
                   <Fragment key={whType}>
                      {collapsedGroups.has(whType) ? (
                         <TableRow>
-                          <TableCell className="py-2">
+                          <TableCell className="py-0.5">
                             <button 
                               onClick={() => toggleGroup(whType)}
                               className="flex items-center gap-2 hover:text-green-krnd"
@@ -350,20 +350,20 @@ export function TrendTable() {
                               {whType}
                             </button>
                           </TableCell>
-                          <TableCell className="py-2 italic text-sm">
+                          <TableCell className="py-0.5 italic text-sm">
                             Group Total ({rows.length} clients)
                           </TableCell>
                           {prevMonths.map(month => (
-                            <TableCell key={month} className="py-2 text-right">
+                            <TableCell key={month} className="py-0.5 text-right">
                               {groupTotals.get(whType)![month].toFixed(1)}
                             </TableCell>
                           ))}
                           {weekColumns.map(week => (
-                            <TableCell key={week} className="py-2 text-right">
+                            <TableCell key={week} className="py-0.5 text-right">
                               {groupTotals.get(whType)![week].toFixed(1)}
                             </TableCell>
                           ))}
-                          <TableCell className="py-2 text-right font-medium">
+                          <TableCell className="py-0.5 text-right font-medium">
                             {groupTotals.get(whType)!.grandTotal.toFixed(1)}
                           </TableCell>
                         </TableRow>
@@ -375,7 +375,7 @@ export function TrendTable() {
                           className={index === 0 ? '' : 'border-l-[24px] border-l-transparent'}
                         >
                           {columns.map((col, colIndex) => (
-                            <TableCell key={colIndex} className="py-2">
+                            <TableCell key={colIndex} className="py-0.5">
                               {colIndex === 0 && index === 0 ? (
                                 <button 
                                   onClick={() => toggleGroup(whType)}
@@ -401,19 +401,19 @@ export function TrendTable() {
                 {/* Grand Total Row */}
                 {summaryRow && (
                   <TableRow className="text-darkgrey-krnd font-bold bg-lightgreen-header">
-                    <TableCell className="py-2">Grand Total</TableCell>
-                    <TableCell className="py-2"></TableCell>
+                    <TableCell className="py-0.5">Grand Total</TableCell>
+                    <TableCell className="py-0.5"></TableCell>
                     {prevMonths.map(month => (
-                      <TableCell key={month} className="py-2 text-right">
+                      <TableCell key={month} className="py-0.5 text-right">
                         {summaryRow[month].toFixed(1)}
                       </TableCell>
                     ))}
                     {weekColumns.map(week => (
-                      <TableCell key={week} className="py-2 text-right">
+                      <TableCell key={week} className="py-0.5 text-right">
                         {summaryRow[week].toFixed(1)}
                       </TableCell>
                     ))}
-                    <TableCell className="py-2 text-right">
+                    <TableCell className="py-0.5 text-right">
                       {summaryRow.grandTotal.toFixed(1)}
                     </TableCell>
                   </TableRow>
