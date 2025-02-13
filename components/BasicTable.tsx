@@ -32,6 +32,7 @@ interface BasicTableProps<TData, TValue> {
   pagination?: PaginationState
   onPaginationChange?: OnChangeFn<PaginationState>
   pageSize?: number
+  stripe?: number
 }
 
 export function BasicTable<TData, TValue>({
@@ -43,6 +44,7 @@ export function BasicTable<TData, TValue>({
   pagination,
   onPaginationChange,
   pageSize = 50,
+  stripe = 5, // Default to alternating every row
 }: BasicTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
 
@@ -108,8 +110,8 @@ export function BasicTable<TData, TValue>({
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
                 className={`${
-                  Math.floor(row.index / 5) % 2 === 0 
-                    ? "bg-green-fade" 
+                  Math.floor(row.index / stripe) % 2 === 0 
+                    ? "bg-lightgreen-header"
                     : "bg-white"
                 }`}
               >

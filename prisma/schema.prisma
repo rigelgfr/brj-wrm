@@ -98,6 +98,7 @@ model months {
   sort                Int?
   inbound             inbound[]
   inbound_aggregated  inbound_aggregated[]
+  occupancy           occupancy[]
   occupancy_sqm       occupancy_sqm[]
   occupancy_vol       occupancy_vol[]
   outbound            outbound[]
@@ -196,6 +197,7 @@ model outbound {
 model weeks {
   week                String                @id @db.VarChar(2)
   inbound_aggregated  inbound_aggregated[]
+  occupancy           occupancy[]
   occupancy_sqm       occupancy_sqm[]
   occupancy_vol       occupancy_vol[]
   outbound_aggregated outbound_aggregated[]
@@ -205,6 +207,7 @@ model years {
   year                Int                   @id
   inbound             inbound[]
   inbound_aggregated  inbound_aggregated[]
+  occupancy           occupancy[]
   occupancy_sqm       occupancy_sqm[]
   occupancy_vol       occupancy_vol[]
   outbound            outbound[]
@@ -245,4 +248,37 @@ model outbound_aggregated {
   years              years      @relation(fields: [year], references: [year], onDelete: Cascade, onUpdate: NoAction, map: "fk_year")
 
   @@id([warehouse, year, month, week_in_month])
+}
+
+model occupancy {
+  year           Int
+  month          String         @db.VarChar(3)
+  week           String         @db.VarChar(2)
+  wh_type        String         @db.VarChar(10)
+  section        String         @db.VarChar(10)
+  occupied_sqm   Int?
+  occupied_vol   Int?
+  empty_sqm      Int?
+  months         months         @relation(fields: [month], references: [month], onDelete: NoAction, onUpdate: NoAction)
+  weeks          weeks          @relation(fields: [week], references: [week], onDelete: NoAction, onUpdate: NoAction)
+  warehouse_type warehouse_type @relation(fields: [wh_type, section], references: [wh_type, section], onDelete: NoAction, onUpdate: NoAction)
+  years          years          @relation(fields: [year], references: [year], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([year, month, week, wh_type, section])
+}
+
+model warehouse_area {
+  area    String @db.VarChar(10)
+  wh_type String @db.VarChar(10)
+
+  @@id([area, wh_type])
+}
+
+model warehouse_type {
+  wh_type   String      @db.VarChar(10)
+  section   String      @db.VarChar(10)
+  space     Int?
+  occupancy occupancy[]
+
+  @@id([wh_type, section], map: "pk_warehouse_type")
 }
