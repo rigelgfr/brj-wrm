@@ -275,7 +275,7 @@ export function OccupancyTable() {
                 <TableHead 
                   key={`W${week}`} 
                   colSpan={3} 
-                  className="text-center bg-lightgreen-header"
+                  className="text-center bg-lightgreen-header border-b-2 border-x-2 border-darkgreen-header"
                 >
                   {week}
                 </TableHead>
@@ -290,9 +290,9 @@ export function OccupancyTable() {
               <TableHead className="bg-lightgreen-header">Total Sqm</TableHead>
               {weeks.map(week => (
                 <Fragment key={`W${week}_subheaders`}>
-                  <TableHead className="text-center border-l bg-lightgreen-header">Occupied</TableHead>
-                  <TableHead className="text-center bg-lightgreen-header">CBM Occupied</TableHead>
-                  <TableHead className="text-center bg-lightgreen-header">Empty</TableHead>
+                  <TableHead className="text-center border-l bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied</TableHead>
+                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">CBM Occupied</TableHead>
+                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Empty</TableHead>
                 </Fragment>
               ))}
             </TableRow>
@@ -374,13 +374,13 @@ export function OccupancyTable() {
                           </TableCell>
                           {weeks.map(week => (
                             <Fragment key={week}>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right border-x-2 border-darkgreen-header">
                                 {(row[`W${week}`]?.occupied_sqm || 0).toFixed(0)}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right border-x-2 border-darkgreen-header">
                                 {(row[`W${week}`]?.occupied_vol || 0).toFixed(0)}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right border-x-2 border-darkgreen-header">
                                 {(row[`W${week}`]?.empty_sqm || 0).toFixed(0)}
                               </TableCell>
                             </Fragment>

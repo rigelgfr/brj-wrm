@@ -37,6 +37,7 @@ const menuSections: MenuSection[] = [
       { icon: <Factory className="w-4 h-4" />, label: 'Operations', href: '/operations' },
       { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (SQM)', href: '/occupancy/sqm' },
       { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (VOL)', href: '/occupancy/vol' },
+      { icon: <SquareStack className="w-4 h-4" />, label: 'Occupancy (v2)', href: '/occupancy/v2' },
       { icon: <Truck className='w-4 h-4' />, label: 'Trucks', href:'/truck'},
       { icon: <Users className='w-4 h-4' />, label: 'Client Trends', href: '/customer' },
     ]
@@ -47,6 +48,7 @@ const menuSections: MenuSection[] = [
       { icon: <ArrowDownToLine className="w-4 h-4" />, label: 'Inbound', href: '/inbound' },
       { icon: <ArrowUpFromLine className="w-4 h-4" />, label: 'Outbound', href: '/outbound' },
       { icon: <Database className="w-4 h-4" />, label: 'Inventory', href: '/inventory' },
+      { icon: <Database className="w-4 h-4" />, label: 'Inventory (v2)', href: '/inventory/v2' },
       { icon: <Save className='w-4 h-4' />, label: 'Backup/Restore DB', href: '/backup' },
     ]
   }

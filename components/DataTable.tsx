@@ -28,6 +28,7 @@ import FileUploadDialog from './FileUploadDialog';
 import { Upload } from "lucide-react"
 import { DataTableFilter } from "./DataTableFilter"
 import { FilterConfig } from "./types"
+import { Input } from "./ui/input"
 
 // Define the filter configuration type
 
@@ -213,6 +214,33 @@ export function DataTable<TData, TValue>({
           >
             Previous
           </Button>
+          <div className="relative w-auto">
+            <Input
+              type="number"
+              value={table.getState().pagination.pageIndex + 1}
+              onChange={(e) => {
+                const value = e.target.value ? Number(e.target.value) : 0;
+                if (value <= 0) {
+                  // Go to first page if value <= 0
+                  table.setPageIndex(0);
+                } else if (value > table.getPageCount()) {
+                  // Go to last page if value > max
+                  table.setPageIndex(table.getPageCount() - 1);
+                } else {
+                  // Otherwise go to the specified page
+                  table.setPageIndex(value - 1);
+                }
+              }}
+              className="text-center px-2"
+              style={{
+                // Pure dynamic width based solely on content
+                width: `${String(table.getState().pagination.pageIndex + 1).length * 12 + 24}px`,
+                minWidth: "54px"
+              }}
+              min={1}
+              max={table.getPageCount()}
+            />
+          </div>
           <Button
             variant="outline"
             size="sm"

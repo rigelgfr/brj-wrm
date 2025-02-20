@@ -20,6 +20,7 @@ const config: Config = {
   			'darkgrey-krnd': '#323033',
 			'green-fade': '#d3e8ba',
 			'lightgreen-header': '#e8ecdc',
+			'darkgreen-header': '#cbcfc0',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
