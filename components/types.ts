@@ -1,5 +1,5 @@
 // First, let's create a separate types file (types.ts)
-export type FilterType = 'text' | 'select' | 'multiSelect' | 'dateRange';
+export type FilterType = 'text' | 'select' | 'multiSelect' | 'dateRange' | 'multiSelectAuto';
 
 export interface FilterOption {
   value: string;
@@ -13,4 +13,5 @@ export interface FilterConfig {
   type?: FilterType;
   options?: FilterOption[];
   isPrimary?: boolean;
+  columnAccessor?: string
 }

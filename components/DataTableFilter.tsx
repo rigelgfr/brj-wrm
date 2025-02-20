@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Filter, ChevronDown, ChevronUp, Check } from "lucide-react"
+import { Filter, ChevronDown } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -61,6 +61,16 @@ function MultiSelectFilter({
     .filter(option => value.includes(option.value))
     .map(option => option.label)
 
+  // Calculate the number of columns based on options length
+  const itemsPerColumn = 5
+  const columnCount = Math.ceil(options.length / itemsPerColumn)
+  
+  // Group options into columns
+  const columns = Array.from({ length: columnCount }, (_, columnIndex) => {
+    const startIndex = columnIndex * itemsPerColumn
+    return options.slice(startIndex, startIndex + itemsPerColumn)
+  })
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -71,7 +81,7 @@ function MultiSelectFilter({
           className={cn("w-full justify-between", className)}
         >
           {value.length === 0 ? (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="text-muted-foreground font-normal">{placeholder}</span>
           ) : value.length === 1 ? (
             selectedLabels[0]
           ) : (
@@ -83,27 +93,32 @@ function MultiSelectFilter({
       <PopoverContent 
         className="p-0" 
         align="start"
-        style={{ width: 'var(--radix-popover-trigger-width)' }} // This line makes it match the trigger width
+        style={{ 
+          width: 'auto',
+          minWidth: 'var(--radix-popover-trigger-width)',
+          maxWidth: '80vw'
+        }}
       >
-        <div className="flex flex-wrap gap-1 p-2">
-          {options.map((option) => (
-            <Button
-              key={option.value}
-              variant="outline"
-              size="sm"
-              className={cn(
-                "flex items-center justify-between border-2 transition-colors w-full",
-                value.includes(option.value)
-                  ? "border-green-krnd bg-green-50 text-green-krnd"
-                  : "border-gray-200 hover:border-green-krnd hover:bg-green-50"
-              )}
-              onClick={() => toggleOption(option.value)}
-            >
-              <span>{option.label}</span>
-              {value.includes(option.value) && (
-                <Check className="h-4 w-4 text-green-krnd" />
-              )}
-            </Button>
+        <div className="flex flex-row gap-2 p-2">
+          {columns.map((columnOptions, columnIndex) => (
+            <div key={`column-${columnIndex}`} className="flex flex-col gap-1">
+              {columnOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex items-center justify-between border-2 transition-colors w-auto",
+                    value.includes(option.value)
+                      ? "border-green-krnd bg-green-50 text-green-krnd"
+                      : "border-gray-200 hover:border-green-krnd hover:bg-green-50"
+                  )}
+                  onClick={() => toggleOption(option.value)}
+                >
+                  <span>{option.label}</span>
+                </Button>
+              ))}
+            </div>
           ))}
         </div>
       </PopoverContent>
@@ -141,7 +156,7 @@ function DateRangeFilter({
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
         >
-          {displayValue || <span className="text-muted-foreground">{placeholder}</span>}
+          {displayValue || <span className="text-muted-foreground font-normal">{placeholder}</span>}
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -166,6 +181,113 @@ function DateRangeFilter({
               onChange={(date) => onChange({ ...value, to: date })}
             />
           </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function MultiSelectAutoFilter<TData>({
+  table,
+  column,
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  table: Table<TData>
+  column: string
+  value: string[]
+  onChange: (value: string[]) => void
+  placeholder: string
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+
+  // Extract all unique values from the specified column in the table
+  const allRowsData = table.getCoreRowModel().rows.map(row => {
+    const rowData = row.original as any
+    return rowData[column]?.toString() || ''
+  })
+
+  // Create unique options from the column data
+  const uniqueValues = Array.from(new Set(allRowsData.filter(Boolean)))
+  const options = uniqueValues.map(val => ({
+    value: val,
+    label: val,
+  }))
+
+  const toggleOption = (optionValue: string) => {
+    if (value.includes(optionValue)) {
+      onChange(value.filter(v => v !== optionValue))
+    } else {
+      onChange([...value, optionValue])
+    }
+  }
+
+  const selectedLabels = options
+    .filter(option => value.includes(option.value))
+    .map(option => option.label)
+
+  // Calculate the number of columns based on options length
+  const itemsPerColumn = 5
+  const columnCount = Math.ceil(options.length / itemsPerColumn)
+  
+  // Group options into columns
+  const columns = Array.from({ length: columnCount }, (_, columnIndex) => {
+    const startIndex = columnIndex * itemsPerColumn
+    return options.slice(startIndex, startIndex + itemsPerColumn)
+  })
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", className)}
+        >
+          {value.length === 0 ? (
+            <span className="text-muted-foreground font-normal">{placeholder}</span>
+          ) : value.length === 1 ? (
+            selectedLabels[0]
+          ) : (
+            `${selectedLabels[0]} +${value.length - 1}`
+          )}
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="p-0" 
+        align="start"
+        style={{ 
+          width: 'auto',
+          minWidth: 'var(--radix-popover-trigger-width)',
+          maxWidth: '80vw'
+        }}
+      >
+        <div className="flex flex-row gap-2 p-2">
+          {columns.map((columnOptions, columnIndex) => (
+            <div key={`column-${columnIndex}`} className="flex flex-col gap-1">
+              {columnOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex items-center justify-between border-2 transition-colors w-full",
+                    value.includes(option.value)
+                      ? "border-green-krnd bg-green-50 text-green-krnd"
+                      : "border-gray-200 hover:border-green-krnd hover:bg-green-50"
+                  )}
+                  onClick={() => toggleOption(option.value)}
+                >
+                  <span>{option.label}</span>
+                </Button>
+              ))}
+            </div>
+          ))}
         </div>
       </PopoverContent>
     </Popover>
@@ -221,6 +343,19 @@ export function DataTableFilter<TData>({
       return (
         <DateRangeFilter
           value={table.getColumn(filter.id)?.getFilterValue() as { from: Date, to: Date } || { from: undefined, to: undefined }}
+          onChange={(value) => table.getColumn(filter.id)?.setFilterValue(value)}
+          placeholder={filter.placeholder}
+          className={filter.width}
+        />
+      );
+    }
+
+    if (filter.type === 'multiSelectAuto') {
+      return (
+        <MultiSelectAutoFilter
+          table={table}
+          column={filter.columnAccessor || filter.id}
+          value={(table.getColumn(filter.id)?.getFilterValue() as string[]) || []}
           onChange={(value) => table.getColumn(filter.id)?.setFilterValue(value)}
           placeholder={filter.placeholder}
           className={filter.width}
@@ -287,7 +422,7 @@ export function DataTableFilter<TData>({
               </div>
             ))}
           </div>
-          <div className="flex justify-end mt-4">
+          <div className="flex justify-start mt-4">
             <Button
               onClick={onReset}
               variant="outline"

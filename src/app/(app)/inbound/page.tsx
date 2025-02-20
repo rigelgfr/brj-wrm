@@ -18,7 +18,7 @@ export default function InboundPage() {
   const inboundOutboundFilters: FilterConfig[] = [
     { 
       id: "area", 
-      placeholder: "Filter warehouse...", 
+      placeholder: "WH Type", 
       type: 'multiSelect',
       options: [
         { value: 'CFS', label: 'CFS' },
@@ -31,24 +31,69 @@ export default function InboundPage() {
     },
     {
       id: "inbound_date",
-      placeholder: "Date range...",
+      placeholder: "Date range",
       type: 'dateRange',
       isPrimary: true,
     },
     { 
       id: "customer_name", 
-      placeholder: "Filter customer...",
+      placeholder: "Customer",
       type: 'text',
     },
     { 
       id: "shipper_name", 
-      placeholder: "Filter shipper...",
+      placeholder: "Shipper",
       type: 'text',
     },
     { 
       id: "item_name", 
-      placeholder: "Filter item...",
+      placeholder: "Item",
       type: 'text',
+    },
+    { 
+      id: "year", 
+      placeholder: "Year", 
+      type: 'multiSelect',
+      options: [
+        { value: '2023', label: '2023' },
+        { value: '2024', label: '2024' },
+      ], 
+    },
+    {
+      id: "month",
+      type: "multiSelectAuto",
+      placeholder: "Month",
+      columnAccessor: "month",
+    },
+    { 
+      id: "week_no", 
+      placeholder: "Week in Year",
+      type: 'multiSelectAuto',
+      columnAccessor: "week_no",
+    },
+    {
+      id: "week_in_month",
+      type: "multiSelectAuto",
+      placeholder: "Week in Month",
+      columnAccessor: "week_in_month",
+    },
+    {
+      id: "inbound_doc_type",
+      type: "multiSelectAuto",
+      placeholder: "Doc Type",
+      columnAccessor: "inbound_doc_type",
+    },
+    {
+      id: "uom",
+      type: "multiSelectAuto",
+      placeholder: "UOM",
+      columnAccessor: "uom",
+    },
+    {
+      id: "truck_type",
+      type: "multiSelectAuto",
+      placeholder: "Truck Type",
+      columnAccessor: "truck_type",
     },
   ];
 
