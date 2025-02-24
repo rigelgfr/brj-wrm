@@ -14,7 +14,6 @@ export default function InboundPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // In your page.tsx, update the filters configuration:
   const inboundOutboundFilters: FilterConfig[] = [
     { 
       id: "area", 
@@ -127,7 +126,7 @@ export default function InboundPage() {
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
       <Heading text="Inbound" Icon={ArrowDownToLine} />
         {isLoading ? (
-          <div className="w-full h-[75vh] flex justify-center items-center">
+          <div className="w-full h-full flex justify-center items-center">
             <Loading />
           </div>
           ) : (
