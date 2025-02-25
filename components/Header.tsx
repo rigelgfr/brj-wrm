@@ -37,7 +37,7 @@ export default function Header({
           <div className="flex items-center space-x-4">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-darkgrey-krnd">{session.user?.name}</p>
-              <p className="text-xs text-darkgrey-krnd">{session.user?.roleName}</p>
+              <p className="text-xs text-darkgrey-krnd">{session.user.role}</p>
             </div>
             
             <Button 

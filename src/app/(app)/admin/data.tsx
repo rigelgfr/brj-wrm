@@ -4,6 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { DataTable } from "@/components/DataTable";
 import { Users, columns } from "./columns";
+import Loading from "@/components/ui/Loading";
 
 export default function AdminPage() {
   const [data, setData] = useState<Users[]>([]);
@@ -19,6 +20,7 @@ export default function AdminPage() {
       }
       const result = await response.json();
       setData(result);
+      console.log("Fetched data:", result);
     } catch (error) {
       console.error("Error fetching inbound data:", error);
       setData([]);
@@ -36,14 +38,20 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <div className="mx-auto p-4 flex flex-col space-y-4 bg-white">
-      <div className="flex-1 min-h-0">
-        <DataTable
-          columns={columns}
-          data={data}
-          onRefresh={handleRefresh}
-        />
+      <div className="mx-auto p-4 flex flex-col space-y-4 bg-white">
+        <div className="flex-1 min-h-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-[75vh]">
+              <Loading />
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={data}
+              onRefresh={handleRefresh}
+            />
+          )}
+        </div>
       </div>
-    </div>
   );
 }

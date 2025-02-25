@@ -8,23 +8,15 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email     String    @unique @db.VarChar(255)
-  username  String    @unique @db.VarChar(50)
-  password  String    @db.VarChar(255)
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
-  roleId    Int       @map("role_id")
-  role      Role      @relation(fields: [roleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String    @unique @db.VarChar(255)
+  username              String    @unique @db.VarChar(50)
+  password              String    @db.VarChar(255)
+  createdAt             DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  role                  String?   @db.VarChar(15)
+  role_users_roleTorole role?     @relation("users_roleTorole", fields: [role], references: [role], onDelete: NoAction, onUpdate: NoAction, map: "fk_role")
 
   @@map("users")
-}
-
-model Role {
-  id    Int    @id @default(autoincrement())
-  name  String @unique @db.VarChar(50)
-  users User[]
-
-  @@map("roles")
 }
 
 model warehouses {
@@ -281,4 +273,9 @@ model warehouse_type {
   occupancy occupancy[]
 
   @@id([wh_type, section], map: "pk_warehouse_type")
+}
+
+model role {
+  role                   String @id @db.VarChar(15)
+  users_users_roleTorole User[] @relation("users_roleTorole")
 }

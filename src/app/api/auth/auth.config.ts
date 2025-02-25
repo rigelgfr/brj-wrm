@@ -24,25 +24,28 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Missing credentials");
           return null
         }
-
+      
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email
           },
-          include: {
-            role: true
-          }
         })
-
+      
+        console.log("Found user:", user);
+      
         if (!user) {
+          console.log("User not found");
           return null
         }
-
+      
         const isPasswordValid = await compare(credentials.password, user.password)
-
+        console.log("Password valid:", isPasswordValid);
+      
         if (!isPasswordValid) {
+          console.log("Invalid password");
           return null
         }
 
@@ -50,8 +53,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.username,
-          roleId: user.roleId + '',
-          roleName: user.role.name
+          role: user.role
         }
       }
     })
@@ -63,8 +65,7 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
-          roleId: token.roleId,
-          roleName: token.roleName
+          role: token.role
         }
       }
     },
@@ -74,8 +75,7 @@ export const authOptions: NextAuthOptions = {
         return {
           ...token,
           id: u.id,
-          roleId: u.roleId,
-          roleName: u.roleName
+          role: u.role
         }
       }
       return token
@@ -90,8 +90,7 @@ declare module "next-auth" {
       id: string;
       name: string;
       email: string;
-      roleId: string;
-      roleName: string;
+      role: string;
     }
   }
 }
@@ -99,7 +98,6 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    roleId: string;
-    roleName: string;
+    role: string;
   }
 }

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, ...updateData } = body;
+    const { id, oldPassword, newPassword, ...updateData } = body;
 
     // Validate required fields
     if (!id) {
@@ -16,9 +16,40 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // If password is being updated, hash it
-    if (updateData.password) {
-      const hashedPassword = await bcrypt.hash(updateData.password, 10);
+    // First get the existing user to verify password if needed
+    const existingUser = await prisma.user.findUnique({
+      where: { id: id }
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Handle password change if requested
+    if (newPassword) {
+      // Verify old password
+      if (!oldPassword) {
+        return NextResponse.json(
+          { error: "Current password is required", formError: true },
+          { status: 400 }
+        );
+      }
+
+      // Compare old password with stored hashed password
+      const isPasswordValid = await bcrypt.compare(oldPassword, existingUser.password);
+      
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { error: "Current password is incorrect", formError: true },
+          { status: 400 }
+        );
+      }
+
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
       updateData.password = hashedPassword;
     }
 
@@ -37,7 +68,7 @@ export async function PATCH(request: Request) {
       },
       data: updateData,
       include: {
-        role: true // Include role information in the response
+        role_users_roleTorole: true
       }
     });
 
@@ -48,7 +79,7 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error("Failed to update user:", error);
     return NextResponse.json(
-      { error: "Failed to update user" },
+      { error: "Failed to update user", formError: true },
       { status: 500 }
     );
   }

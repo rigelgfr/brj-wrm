@@ -8,7 +8,7 @@ export default async function Page() {
   const session = await getServerSession(authOptions);
 
   // Check if user is authenticated and has admin role
-  if (!session || session.user.roleName !== "ADMIN") {    
+  if (!session || session.user.role !== "SUPER_ADMIN") {    
     return (
       <div className="h-full flex items-center justify-center">
         <div className="bg-red-50 text-red-700 p-4 rounded-md">

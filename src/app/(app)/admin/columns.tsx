@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import EditDialog from "@/components/EditDialog";
+import { EditUserDialog } from "@/components/EditDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 // Define the shape of the user data
@@ -21,7 +21,6 @@ export type Users = {
   username: string;
   password: string;
   createdAt: Date | null;
-  roleId: number;
   role: string;
 };
 
@@ -78,7 +77,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/api/users/delete`, {
+      const response = await fetch(`/api/admin/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +107,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
     "email",
     "username",
     "password",
-    "roleId"
+    "role"
   ];
 
   return (
@@ -132,7 +131,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditDialog
+      <EditUserDialog
         row={row.original}
         columns={columns}
         editableColumns={editableColumns}
@@ -159,33 +158,11 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
 export const columns: ColumnDefWithMeta<Users>[] = [
   {
     accessorKey: "id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-2"
-        >
-          ID
-          <ArrowUpDown className="h-4 w-4" />
-        </Button>
-      )
-    },
+    header: "ID",
   },
   {
     accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="px-2"
-        >
-          Email
-          <ArrowUpDown className="h-4 w-4" />
-        </Button>
-      )
-    },
+    header: "Email",
   },
   {
     accessorKey: "username",

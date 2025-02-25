@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import EditDialog from "@/components/EditDialog";
+import { EditDialog } from "@/components/EditDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 import { formatLeadtime } from "../utils";
