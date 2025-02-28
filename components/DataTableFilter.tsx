@@ -1,9 +1,9 @@
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Filter, ChevronDown } from "lucide-react"
+import { Filter, ChevronDown, Search, X } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -30,6 +30,15 @@ interface DataTableFilterProps<TData> {
 interface DateRangeFilterProps {
   value: { from: Date | undefined; to: Date | undefined }
   onChange: (dates: { from: Date | undefined; to: Date | undefined }) => void
+  placeholder: string
+  className?: string
+}
+
+interface SearchDropdownFilterProps<TData> {
+  table: Table<TData>
+  column: string
+  value: string[]
+  onChange: (value: string[]) => void
   placeholder: string
   className?: string
 }
@@ -294,6 +303,141 @@ function MultiSelectAutoFilter<TData>({
   )
 }
 
+function SearchableDropdownAutoFilter<TData>({
+  table,
+  column,
+  value,
+  onChange,
+  placeholder,
+  className,
+}: SearchDropdownFilterProps<TData>) {
+  const [open, setOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Focus input when popover opens
+  useEffect(() => {
+    if (open && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [open])
+
+  // Extract all unique values from the specified column in the table
+  const allRowsData = table.getCoreRowModel().rows.map(row => {
+    const rowData = row.original as any
+    return rowData[column]?.toString() || ''
+  })
+
+  // Create unique options from the column data
+  const uniqueValues = Array.from(new Set(allRowsData.filter(Boolean)))
+  const options = uniqueValues.map(val => ({
+    value: val,
+    label: val,
+  }))
+
+  const filteredOptions = options.filter(option => 
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const toggleOption = (optionValue: string) => {
+    if (value.includes(optionValue)) {
+      onChange(value.filter(v => v !== optionValue))
+    } else {
+      onChange([...value, optionValue])
+    }
+  }
+
+  const selectedOptions = options.filter(option => value.includes(option.value))
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", className)}
+        >
+          {value.length === 0 ? (
+            <span className="text-muted-foreground font-normal">{placeholder}</span>
+          ) : value.length === 1 ? (
+            selectedOptions[0]?.label
+          ) : (
+            `${selectedOptions[0]?.label} +${value.length - 1}`
+          )}
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="p-0" 
+        align="start"
+        style={{ 
+          width: 'auto',
+          minWidth: 'var(--radix-popover-trigger-width)',
+          maxWidth: '80vw'
+        }}
+      >
+        <div className="p-2">
+          <div className="relative mb-2">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              ref={inputRef}
+              placeholder="Search..."
+              className="pl-8"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Selected options */}
+          {selectedOptions.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1 border-b pb-2">
+              {selectedOptions.map(option => (
+                <Button
+                  key={`selected-${option.value}`}
+                  variant="secondary"
+                  size="sm"
+                  className="h-7 gap-1 bg-green-50 text-green-krnd border border-green-krnd"
+                  onClick={() => toggleOption(option.value)}
+                >
+                  {option.label}
+                  <X className="h-3 w-3" />
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* Options list */}
+          <div className="max-h-[200px] overflow-y-auto">
+            {searchQuery ? (
+              filteredOptions.length > 0 ? (
+                filteredOptions.map(option => (
+                  <div
+                    key={option.value}
+                    className="flex items-center py-1.5 px-2 hover:bg-muted cursor-pointer rounded-md"
+                    onClick={() => toggleOption(option.value)}
+                  >
+                    <div className="mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary">
+                      {value.includes(option.value) && (
+                        <div className="h-2 w-2 rounded-sm bg-green-krnd" />
+                      )}
+                    </div>
+                    <span>{option.label}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center text-sm text-muted-foreground">No options found</p>
+              )
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">Enter search keyword</p>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function DataTableFilter<TData>({
   table,
   filters,
@@ -363,6 +507,19 @@ export function DataTableFilter<TData>({
       );
     }
 
+    if (filter.type === 'searchDropdown') {
+      return (
+        <SearchableDropdownAutoFilter
+          table={table}
+          column={filter.columnAccessor || filter.id}
+          value={(table.getColumn(filter.id)?.getFilterValue() as string[]) || []}
+          onChange={(value) => table.getColumn(filter.id)?.setFilterValue(value)}
+          placeholder={filter.placeholder}
+          className={filter.width}
+        />
+      );
+    }
+
     return (
       <Input
         placeholder={filter.placeholder}
@@ -378,13 +535,13 @@ export function DataTableFilter<TData>({
   return (
     <div className="space-y-4">
       {/* Primary Filters - Always Visible */}
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
         {primaryFilters.map((filter) => (
           <div key={filter.id} className="flex-shrink-0">
             {renderFilter(filter)}
           </div>
         ))}
-
+  
         {isExpanded ? (
           <Button
             variant="default"
@@ -405,7 +562,7 @@ export function DataTableFilter<TData>({
           </Button>
         )}
       </div>
-
+  
       {/* Secondary Filters - Expandable */}
       <div
         className={`grid gap-4 transition-all duration-200 ease-in-out ${
@@ -415,9 +572,9 @@ export function DataTableFilter<TData>({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="flex flex-row gap-4 p-2">
+          <div className="flex flex-wrap gap-2 px-0">
             {secondaryFilters.map((filter) => (
-              <div key={filter.id}>
+              <div key={filter.id} className="flex-shrink-0">
                 {renderFilter(filter)}
               </div>
             ))}

@@ -34,15 +34,17 @@ export default function InboundPage() {
       type: 'dateRange',
       isPrimary: true,
     },
-    { 
-      id: "customer_name", 
+    {
+      id: "customer_name",
+      type: "searchDropdown",
       placeholder: "Customer",
-      type: 'text',
+      columnAccessor: "customer_name"  // The name of the column in your data to extract values from
     },
     { 
       id: "shipper_name", 
       placeholder: "Shipper",
-      type: 'text',
+      type: 'searchDropdown',
+      columnAccessor: "shipper_name",
     },
     { 
       id: "item_name", 
@@ -90,7 +92,7 @@ export default function InboundPage() {
     },
     {
       id: "truck_type",
-      type: "multiSelectAuto",
+      type: "searchDropdown",
       placeholder: "Truck Type",
       columnAccessor: "truck_type",
     },
