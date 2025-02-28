@@ -49,7 +49,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
       if (typeof identifier !== 'string') {
         throw new Error('Invalid identifier type');
       }
-
+  
       const response = await fetch(`/api/admin/edit`, {
         method: 'PATCH',
         headers: {
@@ -60,15 +60,21 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
           ...data
         }),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to update record');
+        // Parse the error response to get detailed error message
+        const errorData = await response.json();
+        
+        // Create an error object that includes both the response and error message
+        const error = new Error(errorData.error || 'Failed to update record');
+        (error as any).response = { data: errorData };
+        throw error;
       }
-
+  
       if (table.options.meta?.onRefresh) {
         table.options.meta.onRefresh();
       }
-
+  
     } catch (error) {
       console.error('Failed to update:', error);
       throw error;

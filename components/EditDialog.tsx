@@ -543,6 +543,7 @@ export const EditUserDialog = <TData extends Record<string, ColumnValue>>({
         await onSubmit(submissionData as Partial<TData>, row[primaryKeyField]);
         onClose();
       } catch (error: any) {
+        console.log('Error details:', error);
         // The error structure depends on how your API client is implemented
         // This handling covers both axios and fetch style errors
         if (error.response?.data?.error) {

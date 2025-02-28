@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck, Save, Users } from 'lucide-react';
+import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck, Save, Users, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -21,6 +21,7 @@ interface MenuItem {
 interface MenuSection {
   title: string;
   items: MenuItem[];
+  roleRequired?: string; // Added roleRequired property
 }
 
 interface SlidingMenuProps {
@@ -51,11 +52,21 @@ const menuSections: MenuSection[] = [
       { icon: <Database className="w-4 h-4" />, label: 'Inventory (v2)', href: '/inventory/v2' },
       { icon: <Save className='w-4 h-4' />, label: 'Backup/Restore DB', href: '/backup' },
     ]
+  },
+  {
+    title: 'Admin',
+    items: [
+      { icon: <Shield className="w-4 h-4" />, label: 'Users', href: '/admin' },
+    ],
+    roleRequired: 'SUPER_ADMIN' // This section requires SUPER_ADMIN role
   }
 ];
 
 export default function SlidingMenu({ open, onOpenChange, session }: SlidingMenuProps) {
   if (!session) return null;
+  
+  // Get user role from session
+  const userRole = session.user?.role || '';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -75,26 +86,33 @@ export default function SlidingMenu({ open, onOpenChange, session }: SlidingMenu
         {/* Scrollable Content Section */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className="space-y-4">
-            {menuSections.map((section, index) => (
-              <div key={index} className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground tracking-wider">
-                  {section.title}
-                </h3>
-                <nav className="space-y-1">
-                  {section.items.map((item, itemIndex) => (
-                    <a
-                      key={itemIndex}
-                      href={item.href}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
-                      onClick={() => onOpenChange(false)}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </a>
-                  ))}
-                </nav>
-              </div>
-            ))}
+            {menuSections.map((section, index) => {
+              // Skip rendering sections that require a specific role if user doesn't have it
+              if (section.roleRequired && section.roleRequired !== userRole) {
+                return null;
+              }
+              
+              return (
+                <div key={index} className="space-y-2">
+                  <h3 className="text-sm font-medium text-muted-foreground tracking-wider">
+                    {section.title}
+                  </h3>
+                  <nav className="space-y-1">
+                    {section.items.map((item, itemIndex) => (
+                      <a
+                        key={itemIndex}
+                        href={item.href}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        {item.icon}
+                        {item.label}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+              );
+            })}
           </div>
         </div>
 
