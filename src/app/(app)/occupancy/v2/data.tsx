@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import Loading from "@/components/ui/Loading";
-import { PieChart } from "@/components/PieChart";
+import { PieChart } from "@/components/Charts";
 
 interface WeekData {
   occupied_sqm: number;

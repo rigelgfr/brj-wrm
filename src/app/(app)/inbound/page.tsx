@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Inbound, columns } from "./columns";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/Tables";
 import Loading from "@/components/ui/Loading";
 import Heading from "@/components/ui/Heading";
 import { ArrowDownToLine } from "lucide-react";

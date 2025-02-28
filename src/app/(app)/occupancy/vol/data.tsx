@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/components/FilterBar'
-import SingleBarChart from '@/components/SingleBarChart'
+import { SingleBarChart } from '@/components/Charts'
 import Loading from '@/components/ui/Loading'
 import { Card, CardContent } from '@/components/ui/card'
 

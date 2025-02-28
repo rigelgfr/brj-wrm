@@ -6,12 +6,12 @@ import { ColumnDef, ColumnFiltersState, PaginationState } from "@tanstack/react-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StickyNote, MoreHorizontal, Plus } from "lucide-react";
-import { BasicTable } from "@/components/BasicTable";
+import { BasicTable } from "@/components/Tables";
 import Loading from "@/components/ui/Loading";
 import { Row, Table } from "@tanstack/react-table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import EditDialog from "@/components/EditDialog";
-import AddOccupancy2Dialog from "@/components/AddOccupancy2Dialog";
+import { EditDialog } from "@/components/EditDialog";
+import { AddOccupancy2Dialog } from "@/components/AddDialog";
 
 // Type for the occupancy data
 export type Occupancy = {

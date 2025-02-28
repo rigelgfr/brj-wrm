@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/Tables";
 import { Users, columns } from "./columns";
 import Loading from "@/components/ui/Loading";
 

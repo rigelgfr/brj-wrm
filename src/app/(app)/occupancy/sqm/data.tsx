@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/components/FilterBar'
-import { PieChart } from '@/components/PieChart'
+import { PieChart } from '@/components/Charts'
 import Loading from '@/components/ui/Loading'
 import { Card, CardContent } from '@/components/ui/card'
 

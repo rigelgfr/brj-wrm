@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw } from 'lucide-react'
 import FilterBar, { FilterState, getStoredFilters, storeFilters } from '@/components/FilterBar'
-import GroupedBarChart from '@/components/GroupedBarChart'
+import { GroupedBarChart } from '@/components/Charts'
 import Loading from '@/components/ui/Loading'
 import { Button } from '@/components/ui/button'
 

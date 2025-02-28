@@ -6,10 +6,10 @@ import { ColumnDef, ColumnFiltersState, PaginationState, Row, Table } from "@tan
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StickyNote, MoreHorizontal, Plus } from "lucide-react";
-import { BasicTable } from "@/components/BasicTable";
-import AddOccupancyDialog from '@/components/AddOccupancyDialog';
+import { BasicTable } from "@/components/Tables";
+import { AddOccupancyDialog } from "@/components/AddDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import EditDialog from "@/components/EditDialog";
+import { EditDialog } from "@/components/EditDialog";
 import Loading from "@/components/ui/Loading";
 
 // Types remain the same

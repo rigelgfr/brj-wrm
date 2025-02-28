@@ -633,7 +633,7 @@ export const EditUserDialog = <TData extends Record<string, ColumnValue>>({
           {/* Password Change Section */}
           <div className="mt-6 mb-2">
             <h3 className="font-medium text-base">Change Password</h3>
-            <p className="text-xs text-gray-500">Leave blank if you don't want to change your password</p>
+            <p className="text-xs text-gray-500">Leave blank if you don&apos;t want to change your password</p>
           </div>
           
           <div className="grid grid-cols-4 items-center gap-2">
