@@ -6,6 +6,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -457,4 +464,237 @@ const getLastDayOfMonth = (year: number, month: string): Date => {
         </Dialog>
     );
 };
-  
+
+interface AddUsersDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onRefresh: () => void;
+}
+
+const USER_ROLES = [
+  'SUPER_ADMIN',
+  'ADMIN',
+];
+
+interface UserData {
+  email: string;
+  username: string;
+  password: string;
+  role: string;
+}
+
+export const AddUsersDialog: React.FC<AddUsersDialogProps> = ({
+  isOpen,
+  onClose,
+  onRefresh,
+}) => {
+  const [userData, setUserData] = useState<UserData>({
+    email: '',
+    username: '',
+    password: '',
+    role: 'Viewer' // Default role
+  });
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      // Reset form when dialog opens
+      setUserData({
+        email: '',
+        username: '',
+        password: '',
+        role: 'ADMIN'
+      });
+      setErrors({});
+    }
+  }, [isOpen]);
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!userData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!userData.username) {
+      newErrors.username = 'Username is required';
+    } else if (userData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    }
+    
+    if (!userData.role) {
+      newErrors.role = 'Role is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      const response = await fetch('/api/admin/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || 'Failed to add user');
+        return;
+      }
+
+      onRefresh();
+      onClose();
+    } catch (error) {
+      console.error('Submit error:', error);
+      alert('An error occurred while saving the user data. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+      setShowConfirm(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof UserData, value: string) => {
+    setUserData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear the error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const handleCancel = () => {
+    setUserData({
+      email: '',
+      username: '',
+      password: '',
+      role: 'Viewer'
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            Add New User
+          </DialogTitle>
+          <DialogDescription>
+            Create a new user account with the specified role and permissions.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={userData.email}
+              onChange={e => handleInputChange('email', e.target.value)}
+              className={errors.email ? "border-red-500" : "border-green-krnd"}
+              placeholder="user@example.com"
+            />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              type="text"
+              value={userData.username}
+              onChange={e => handleInputChange('username', e.target.value)}
+              className={errors.username ? "border-red-500" : "border-green-krnd"}
+              placeholder="username"
+            />
+            {errors.username && (
+              <p className="text-sm text-red-500">{errors.username}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={userData.password}
+              onChange={e => handleInputChange('password', e.target.value)}
+              className={errors.password ? "border-red-500" : "border-green-krnd"}
+              placeholder="••••••••"
+            />
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password}</p>
+            )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select 
+              value={userData.role} 
+              onValueChange={value => handleInputChange('role', value)}
+            >
+              <SelectTrigger className={errors.role ? "border-red-500" : "border-green-krnd"}>
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                {USER_ROLES.map(role => (
+                  <SelectItem key={role} value={role}>
+                    {role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.role && (
+              <p className="text-sm text-red-500">{errors.role}</p>
+            )}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel} className="border-gray-400">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => setShowConfirm(true)}
+            disabled={isSubmitting}
+          >
+            Add User
+          </Button>
+        </DialogFooter>
+
+        <ConfirmDialog
+          open={showConfirm}
+          onOpenChange={setShowConfirm}
+          onContinue={handleSubmit}
+          title="Add New User"
+          description="Are you sure you want to create this user account? You can edit their details later if needed."
+          cancelText="No, Cancel"
+          continueText="Yes, Create User"
+          variant="success"
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};

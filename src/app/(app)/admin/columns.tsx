@@ -117,8 +117,9 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
   ];
 
   return (
-    <>
-      <DropdownMenu>
+    <div>
+      <div className="w-full flex justify-center">
+        <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
             <span className="sr-only">Open menu</span>
@@ -135,8 +136,9 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
-
+        </DropdownMenu>
+      </div>
+        
       <EditUserDialog
         row={row.original}
         columns={columns}
@@ -157,7 +159,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
         continueText="Yes, Delete"
         variant="destructive"
       />
-    </>
+    </div>
   );
 };
 
@@ -212,7 +214,7 @@ export const columns: ColumnDefWithMeta<Users>[] = [
         hour: '2-digit',
         minute: '2-digit'
       });
-      return <div className="text-right">{formattedDate}</div>;
+      return <div className="text-center">{formattedDate}</div>;
     },
   },
   {

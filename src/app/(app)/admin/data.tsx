@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react";
-import { DataTable } from "@/components/Tables";
+import { DataTable, UsersTable } from "@/components/Tables";
 import { Users, columns } from "./columns";
 import Loading from "@/components/ui/Loading";
 
@@ -45,10 +45,11 @@ export default function AdminPage() {
               <Loading />
             </div>
           ) : (
-            <DataTable
+            <UsersTable
               columns={columns}
               data={data}
               onRefresh={handleRefresh}
+              showAddUser={true}
             />
           )}
         </div>
