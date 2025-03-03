@@ -54,7 +54,7 @@ const ActionCell = ({ row, table, tableType, unit }: ActionCellProps) => {
     try {
       const { year, month, week, wh_type, status } = row.original;
 
-      const response = await fetch('/api/inventory/update', {
+      const response = await fetch('/api/inventory/v1/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -208,7 +208,7 @@ export function InventoryTables() {
     console.log('Loading started'); // Add this debug log
 
     try {
-      const response = await fetch("/api/inventory/table");
+      const response = await fetch("/api/inventory/v1/table");
       const data = await response.json();
       setSqmData(data.occupancySqm);
       setVolData(data.occupancyVol);

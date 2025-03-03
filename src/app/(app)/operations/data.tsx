@@ -45,8 +45,8 @@ export default function OperationsData() {
       filters.warehouse.forEach(warehouse => params.append('warehouse', warehouse))
 
       const [inboundRes, outboundRes] = await Promise.all([
-        fetch(`/api/operation_in/chart?${params.toString()}`),
-        fetch(`/api/operation_out/chart?${params.toString()}`)
+        fetch(`/api/operations//in/chart?${params.toString()}`),
+        fetch(`/api/operations/out/chart?${params.toString()}`)
       ])
       
       if (!inboundRes.ok || !outboundRes.ok) {
@@ -84,8 +84,8 @@ export default function OperationsData() {
     try {
       // Update both inbound and outbound aggregates
       const [inboundRes, outboundRes] = await Promise.all([
-        fetch('/api/operation_in/update', { method: 'PUT' }),
-        fetch('/api/operation_out/update', { method: 'PUT' })
+        fetch('/api/operations/in/update', { method: 'PUT' }),
+        fetch('/api/operations/out/update', { method: 'PUT' })
       ])
 
       if (!inboundRes.ok || !outboundRes.ok) {

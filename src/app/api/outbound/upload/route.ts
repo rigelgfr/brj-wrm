@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'csv-parse';
 import { prisma } from '@/lib/prisma';
-import { updateOutboundAggregates } from '../../operation_out/update/utils';
+import { updateOutboundAggregates } from '../../operations/out/update/utils';
 
 // Define interfaces for the CSV row and processed data
 interface CSVRow {

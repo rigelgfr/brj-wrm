@@ -38,7 +38,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
     try {
       const { year, month, week, wh_type, section } = row.original;
 
-      const response = await fetch('/api/inventory/update2', {
+      const response = await fetch('/api/inventory/v2/update', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +185,7 @@ export function InventoryTable() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/inventory/table2");
+      const response = await fetch("/api/inventory/v2/table");
       const result = await response.json();
       setData(result.occupancy);
     } catch (error) {

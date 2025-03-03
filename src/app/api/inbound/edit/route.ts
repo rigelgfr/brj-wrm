@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { updateInboundAggregates } from "../../operation_in/update/utils";
+import { updateInboundAggregates } from "../../operations/in/update/utils";
 
 const EDITABLE_COLUMNS = [
   "area",

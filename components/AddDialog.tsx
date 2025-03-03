@@ -62,7 +62,7 @@ export const AddOccupancyDialog: React.FC<AddOccupancyDialogProps> = ({
 
   const fetchLastPeriod = useCallback(async () => {
     try {
-      const response = await fetch("/api/inventory/table");
+      const response = await fetch("/api/inventory/v1/table");
       const data = await response.json();
       
       if (data.occupancySqm.length > 0) {
@@ -102,7 +102,7 @@ export const AddOccupancyDialog: React.FC<AddOccupancyDialogProps> = ({
         space: volData[wh_type] || 0,
       }));
 
-      const response = await fetch('/api/inventory/add', {
+      const response = await fetch('/api/inventory/v1/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -297,7 +297,7 @@ const getLastDayOfMonth = (year: number, month: string): Date => {
 
     const fetchLastPeriod = useCallback(async () => {
         try {
-        const response = await fetch("/api/inventory/table2");
+        const response = await fetch("/api/inventory/v2/table");
         const data = await response.json();
         console.log("Received data from table2:", data);
         
@@ -341,7 +341,7 @@ const getLastDayOfMonth = (year: number, month: string): Date => {
             data.occupied_sqm > 0 || data.occupied_vol > 0
         );
 
-        const response = await fetch('/api/inventory/add2', {
+        const response = await fetch('/api/inventory/v2/add', {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
