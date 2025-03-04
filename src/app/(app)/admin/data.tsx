@@ -22,16 +22,6 @@ export default function AdminPage() {
       isPrimary: true
     },
     {
-      id: "role",
-      placeholder: "Role",
-      type: 'multiSelect',
-      options: [
-        { value: 'ADMIN', label: 'ADMIN' },
-        { value: 'SUPER_ADMIN', label: 'SUPER_ADMIN' },
-      ],
-      isPrimary: true
-    },
-    {
       id: "email",
       placeholder: "Email",
       type: 'text'
