@@ -225,15 +225,15 @@ return (
         )}
         </div>
         {showUpload && (
-        <Button
+          <Button
             onClick={() => setShowUploadDialog(true)}
             variant="default"
             size="default"
             className="bg-green-krnd hover:bg-green-krnd-hover px-2 ml-4"
-        >
-            <Upload />
-            Upload CSV
-        </Button>
+          >
+              <Upload />
+              Upload CSV
+          </Button>          
         )}
     </div>
 

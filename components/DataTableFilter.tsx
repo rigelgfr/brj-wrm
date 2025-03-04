@@ -80,6 +80,7 @@ function MultiSelectFilter({
     return options.slice(startIndex, startIndex + itemsPerColumn)
   })
 
+  // In MultiSelectFilter component
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -96,9 +97,23 @@ function MultiSelectFilter({
           ) : (
             `${selectedLabels[0]} +${value.length - 1}`
           )}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {value.length > 0 ? (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange([]);
+                setOpen(false);
+              }}
+              className="ml-2 p-1 rounded-md hover:bg-gray-200 cursor-pointer"
+            >
+              <X className="h-4 w-4 text-lightgrey-krnd" />
+            </div>
+          ) : (
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
         </Button>
       </PopoverTrigger>
+    {/* Rest of the component */}
       <PopoverContent 
         className="p-0" 
         align="start"
@@ -156,6 +171,7 @@ function DateRangeFilter({
     granularity: "day" as const,
   }
 
+  // In DateRangeFilter component
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -166,9 +182,23 @@ function DateRangeFilter({
           className={cn("w-full justify-between", className)}
         >
           {displayValue || <span className="text-muted-foreground font-normal">{placeholder}</span>}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {(value.from || value.to) ? (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange({ from: undefined, to: undefined });
+                setOpen(false);
+              }}
+              className="ml-2 p-1 rounded-md hover:bg-gray-200 cursor-pointer"
+            >
+              <X className="h-4 w-4 text-lightgrey-krnd" />
+            </div>
+          ) : (
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
         </Button>
       </PopoverTrigger>
+    {/* Rest of the component */}
       <PopoverContent 
         className="w-auto p-0"
         align="start"
@@ -239,7 +269,7 @@ function MultiSelectAutoFilter<TData>({
     .map(option => option.label)
 
   // Calculate the number of columns based on options length
-  const itemsPerColumn = 5
+  const itemsPerColumn = 6
   const columnCount = Math.ceil(options.length / itemsPerColumn)
   
   // Group options into columns
@@ -248,6 +278,7 @@ function MultiSelectAutoFilter<TData>({
     return options.slice(startIndex, startIndex + itemsPerColumn)
   })
 
+  // In MultiSelectAutoFilter component
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -264,9 +295,23 @@ function MultiSelectAutoFilter<TData>({
           ) : (
             `${selectedLabels[0]} +${value.length - 1}`
           )}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {value.length > 0 ? (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange([]);
+                setOpen(false);
+              }}
+              className="ml-2 p-1 rounded-md hover:bg-gray-200 cursor-pointer"
+            >
+              <X className="h-4 w-4 text-lightgrey-krnd" />
+            </div>
+          ) : (
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
         </Button>
       </PopoverTrigger>
+    {/* Rest of the component */}
       <PopoverContent 
         className="p-0" 
         align="start"
@@ -349,6 +394,7 @@ function SearchableDropdownAutoFilter<TData>({
 
   const selectedOptions = options.filter(option => value.includes(option.value))
 
+  // In SearchableDropdownAutoFilter component
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -365,9 +411,23 @@ function SearchableDropdownAutoFilter<TData>({
           ) : (
             `${selectedOptions[0]?.label} +${value.length - 1}`
           )}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {value.length > 0 ? (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange([]);
+                setOpen(false);
+              }}
+              className="ml-2 p-1 rounded-md hover:bg-gray-200 cursor-pointer"
+            >
+              <X className="h-4 w-4 text-lightgrey-krnd" />
+            </div>
+          ) : (
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
         </Button>
       </PopoverTrigger>
+    {/* Rest of the component */}
       <PopoverContent 
         className="p-0" 
         align="start"
@@ -432,6 +492,122 @@ function SearchableDropdownAutoFilter<TData>({
               <p className="text-center text-sm text-muted-foreground">Enter search keyword</p>
             )}
           </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function CheckboxAutoFilter<TData>({
+  table,
+  column,
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  table: Table<TData>
+  column: string
+  value: string[]
+  onChange: (value: string[]) => void
+  placeholder: string
+  className?: string
+}) {
+  const [open, setOpen] = useState(false)
+
+  // Extract all unique values from the specified column in the table
+  const allRowsData = table.getCoreRowModel().rows.map(row => {
+    const rowData = row.original as any
+    return rowData[column]?.toString() || ''
+  })
+
+  // Create unique options from the column data
+  const uniqueValues = Array.from(new Set(allRowsData.filter(Boolean)))
+  const options = uniqueValues.map(val => ({
+    value: val,
+    label: val,
+  }))
+
+  const toggleOption = (optionValue: string) => {
+    if (value.includes(optionValue)) {
+      onChange(value.filter(v => v !== optionValue))
+    } else {
+      onChange([...value, optionValue])
+    }
+  }
+
+  const selectedOptions = options.filter(option => value.includes(option.value))
+
+  // Calculate the number of columns based on options length
+  const itemsPerColumn = 5
+  const columnCount = Math.ceil(options.length / itemsPerColumn)
+  
+  // Group options into columns
+  const columns = Array.from({ length: columnCount }, (_, columnIndex) => {
+    const startIndex = columnIndex * itemsPerColumn
+    return options.slice(startIndex, startIndex + itemsPerColumn)
+  })
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", className)}
+        >
+          {value.length === 0 ? (
+            <span className="text-muted-foreground font-normal">{placeholder}</span>
+          ) : value.length === 1 ? (
+            selectedOptions[0]?.label
+          ) : (
+            `${selectedOptions[0]?.label} +${value.length - 1}`
+          )}
+          {value.length > 0 ? (
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange([]);
+                setOpen(false);
+              }}
+              className="ml-2 p-1 rounded-md hover:bg-gray-200 cursor-pointer"
+            >
+              <X className="h-4 w-4 text-lightgrey-krnd" />
+            </div>
+          ) : (
+            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="p-0" 
+        align="start"
+        style={{ 
+          width: 'auto',
+          minWidth: 'var(--radix-popover-trigger-width)',
+          maxWidth: '80vw'
+        }}
+      >
+        <div className="flex flex-row gap-2 p-2">
+          {columns.map((columnOptions, columnIndex) => (
+            <div key={`column-${columnIndex}`} className="flex flex-col gap-1">
+              {columnOptions.map(option => (
+                <div
+                  key={option.value}
+                  className="flex items-center py-1.5 px-2 hover:bg-muted cursor-pointer rounded-md"
+                  onClick={() => toggleOption(option.value)}
+                >
+                  <div className="mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary">
+                    {value.includes(option.value) && (
+                      <div className="h-2 w-2 rounded-sm bg-green-krnd" />
+                    )}
+                  </div>
+                  <span>{option.label}</span>
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </PopoverContent>
     </Popover>
@@ -520,6 +696,19 @@ export function DataTableFilter<TData>({
       );
     }
 
+    if (filter.type === 'checkboxAuto') {
+      return (
+        <CheckboxAutoFilter
+          table={table}
+          column={filter.columnAccessor || filter.id}
+          value={(table.getColumn(filter.id)?.getFilterValue() as string[]) || []}
+          onChange={(value) => table.getColumn(filter.id)?.setFilterValue(value)}
+          placeholder={filter.placeholder}
+          className={filter.width}
+        />
+      );
+    }
+
     return (
       <Input
         placeholder={filter.placeholder}
@@ -572,7 +761,7 @@ export function DataTableFilter<TData>({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="flex flex-wrap gap-2 px-0">
+          <div className="flex flex-wrap gap-2 px-0 py-1">
             {secondaryFilters.map((filter) => (
               <div key={filter.id} className="flex-shrink-0">
                 {renderFilter(filter)}
@@ -582,9 +771,9 @@ export function DataTableFilter<TData>({
           <div className="flex justify-start mt-4">
             <Button
               onClick={onReset}
-              variant="outline"
+              variant="default"
               size="sm"
-              className="text-darkgrey-krnd"
+              className="text-white bg-darkgrey-krnd"
             >
               Reset Filters
             </Button>

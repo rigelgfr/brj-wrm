@@ -54,11 +54,8 @@ export default function InboundPage() {
     { 
       id: "year", 
       placeholder: "Year", 
-      type: 'multiSelect',
-      options: [
-        { value: '2023', label: '2023' },
-        { value: '2024', label: '2024' },
-      ], 
+      type: 'checkboxAuto',
+      columnAccessor: "year",
     },
     {
       id: "month",
@@ -74,13 +71,13 @@ export default function InboundPage() {
     },
     {
       id: "week_in_month",
-      type: "multiSelectAuto",
-      placeholder: "Week in Month",
+      type: "checkboxAuto",
+      placeholder: "W",
       columnAccessor: "week_in_month",
     },
     {
       id: "inbound_doc_type",
-      type: "multiSelectAuto",
+      type: "checkboxAuto",
       placeholder: "Doc Type",
       columnAccessor: "inbound_doc_type",
     },

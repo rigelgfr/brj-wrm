@@ -2,14 +2,46 @@
 'use client'
 
 import { useEffect, useState, useCallback } from "react";
-import { DataTable, UsersTable } from "@/components/Tables";
-import { Users, columns } from "./columns";
+import { UsersTable } from "@/components/Tables";
+import { User, columns } from "./columns";
 import Loading from "@/components/ui/Loading";
+import { FilterConfig } from "@/components/types";
+import { Users } from "lucide-react";
+import Heading from "@/components/ui/Heading";
 
 export default function AdminPage() {
-  const [data, setData] = useState<Users[]>([]);
+  const [data, setData] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const usersFilters: FilterConfig[] = [
+    { 
+      id: "username", 
+      placeholder: "Username",
+      type: 'text',
+      isPrimary: true
+    },
+    {
+      id: "role",
+      placeholder: "Role",
+      type: 'multiSelect',
+      options: [
+        { value: 'ADMIN', label: 'ADMIN' },
+        { value: 'SUPER_ADMIN', label: 'SUPER_ADMIN' },
+      ],
+      isPrimary: true
+    },
+    {
+      id: "email",
+      placeholder: "Email",
+      type: 'text'
+    },
+    {
+      id: "created_at",
+      placeholder: "Created At",
+      type: "dateRange",
+    }
+  ];
 
   const fetchUsersData = async () => {
     setIsLoading(true);
@@ -38,7 +70,8 @@ export default function AdminPage() {
   }, []);
 
   return (
-      <div className="mx-auto p-4 flex flex-col space-y-4 bg-white">
+      <div className="mx-[1em] p-4 flex flex-col space-y-4">
+        <Heading text="Users" Icon={Users} />
         <div className="flex-1 min-h-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-[75vh]">
@@ -49,6 +82,7 @@ export default function AdminPage() {
               columns={columns}
               data={data}
               onRefresh={handleRefresh}
+              filters={usersFilters}
               showAddUser={true}
             />
           )}

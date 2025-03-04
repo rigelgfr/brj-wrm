@@ -15,7 +15,7 @@ import { EditUserDialog } from "@/components/EditDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 // Define the shape of the user data
-export type Users = {
+export type User = {
   id: string;
   email: string;
   username: string;
@@ -35,8 +35,8 @@ type ColumnDefWithMeta<T> = ColumnDef<T> & {
 };
 
 interface ActionCellProps {
-  row: Row<Users>;
-  table: Table<Users>;
+  row: Row<User>;
+  table: Table<User>;
 }
 
 // Create a separate component for the actions cell
@@ -44,7 +44,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleSubmit = async (data: Partial<Users>, identifier: string | Date | number | null) => {
+  const handleSubmit = async (data: Partial<User>, identifier: string | Date | number | null) => {
     try {
       if (typeof identifier !== 'string') {
         throw new Error('Invalid identifier type');
@@ -163,7 +163,7 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
   );
 };
 
-export const columns: ColumnDefWithMeta<Users>[] = [
+export const columns: ColumnDefWithMeta<User>[] = [
   {
     accessorKey: "id",
     header: "ID",
