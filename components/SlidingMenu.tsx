@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck, Save, Users, Shield } from 'lucide-react';
+import { LayoutDashboard, Factory, SquareStack, Database, LogOut, ArrowDownToLine, ArrowUpFromLine, Truck, Save, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -56,7 +56,7 @@ const menuSections: MenuSection[] = [
   {
     title: 'Admin',
     items: [
-      { icon: <Shield className="w-4 h-4" />, label: 'Users', href: '/admin' },
+      { icon: <Users className="w-4 h-4" />, label: 'Users', href: '/admin' },
     ],
     roleRequired: 'SUPER_ADMIN' // This section requires SUPER_ADMIN role
   }
