@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../auth/auth.config';
 import bcrypt from 'bcrypt';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+    
+  // Check if user is authenticated and has admin role
+  if (!session || session.user.role !== "SUPER_ADMIN") {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  } else {
     try {
       const { email, username, password, role } = await request.json();
   
@@ -64,5 +75,6 @@ export async function POST(request: NextRequest) {
       );
     } finally {
       await prisma.$disconnect();
-    }
+    }    
   }
+}
