@@ -20,6 +20,7 @@ import { formatLeadtime } from "../utils";
 // Define the shape of the outbound data
 export type Outbound = {
   no: number;
+  wh_name: string | null;
   area: string | null;
   outbound_date: Date | null;  // We’ll handle this as a string for formatting
   outbound_time: string | null;

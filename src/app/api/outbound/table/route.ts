@@ -11,6 +11,7 @@ export async function GET() {
       },
       select: {
         no: true,
+        wh_name: true,
         area: true,
         outbound_date: true,
         outbound_time: true,

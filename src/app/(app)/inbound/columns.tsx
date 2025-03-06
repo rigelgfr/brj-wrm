@@ -20,6 +20,7 @@ import { formatLeadtime } from "../utils";
 // Define the shape of the inbound data
 export type Inbound = {
   no: number;
+  wh_name: string | null;
   area: string | null;
   inbound_date: Date | null;  // We’ll handle this as a string for formatting
   gate_in: Date | null;
@@ -252,6 +253,10 @@ export const columns: ColumnDefWithMeta<Inbound>[] = [
     {
         accessorKey: "id",
         header: "ID",
+    },
+    {
+      accessorKey: "wh_name",
+      header: "WH Name",
     },
     {
       accessorKey: "area",
