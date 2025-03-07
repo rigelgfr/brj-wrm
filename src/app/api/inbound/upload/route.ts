@@ -114,22 +114,32 @@ const processDate = (dateStr: string | null | undefined): Date => {
   }
 };
 
-// Helper function to process inbound date with specific format (DD-Mon-YYYY)
+// Enhanced helper function to process inbound date with multiple formats (DD-Mon-YYYY or DD-Mmm-YY)
 const processInboundDate = (dateStr: string | null | undefined): Date => {
   if (!dateStr || dateStr.trim() === '') {
     return new Date('2024-01-01');
   }
+  
   try {
-    // Parse date in DD-Mon-YYYY format
-    const [day, month, year] = dateStr.split('-');
+    // Parse date in either DD-Mon-YYYY or DD-Mmm-YY format
+    const [day, month, yearPart] = dateStr.split('-');
     const monthMap: { [key: string]: number } = {
       'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
       'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
     };
     
+    // Handle both YY and YYYY formats
+    let year: number;
+    if (yearPart.length === 2) {
+      // If YY format, convert to full year (assuming 20xx for simplicity)
+      year = 2000 + parseInt(yearPart);
+    } else {
+      year = parseInt(yearPart);
+    }
+    
     // Create date using UTC to avoid timezone offset
     return new Date(Date.UTC(
-      parseInt(year),
+      year,
       monthMap[month],
       parseInt(day),
       0, 0, 0
