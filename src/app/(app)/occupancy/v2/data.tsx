@@ -290,9 +290,9 @@ export function OccupancyTable() {
               <TableHead className="bg-lightgreen-header">Total Sqm</TableHead>
               {weeks.map(week => (
                 <Fragment key={`W${week}_subheaders`}>
-                  <TableHead className="text-center border-l bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied</TableHead>
-                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">CBM Occupied</TableHead>
-                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Empty</TableHead>
+                  <TableHead className="text-center border-l bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied<br/>(sqm)</TableHead>
+                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied<br/>(cbm) </TableHead>
+                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Empty<br/>(sqm)</TableHead>
                 </Fragment>
               ))}
             </TableRow>
