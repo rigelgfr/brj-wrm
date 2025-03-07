@@ -59,6 +59,33 @@ export default function AdminPage() {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
+  const handleBatchDelete = async (ids: string[]) => {
+    setIsLoading(true);
+    try {
+      // Convert ids to numbers if your backend expects numeric IDs
+      const response = await fetch("/api/admin/delete/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to delete records");
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Error deleting records:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
       <div className="mx-[1em] p-4 flex flex-col space-y-4">
         <Heading text="Users" Icon={Users} />
@@ -74,6 +101,7 @@ export default function AdminPage() {
               onRefresh={handleRefresh}
               filters={usersFilters}
               showAddUser={true}
+              onBatchDelete={handleBatchDelete}
             />
           )}
         </div>

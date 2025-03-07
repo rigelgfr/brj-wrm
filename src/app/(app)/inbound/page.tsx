@@ -14,7 +14,7 @@ export default function InboundPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const inboundOutboundFilters: FilterConfig[] = [
+  const inboundFilters: FilterConfig[] = [
     { 
       id: "area", 
       placeholder: "WH Type", 
@@ -121,6 +121,33 @@ export default function InboundPage() {
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
+  const handleBatchDelete = async (ids: string[]) => {
+    setIsLoading(true);
+    try {
+      // Convert ids to numbers if your backend expects numeric IDs
+      const response = await fetch("/api/inbound/delete/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to delete records");
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error("Error deleting records:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="mx-[1em] p-4 flex flex-col space-y-4 bg-white">
       <Heading text="Inbound" Icon={ArrowDownToLine} />
@@ -134,8 +161,9 @@ export default function InboundPage() {
               columns={columns}
               data={data}
               onRefresh={handleRefresh}
-              filters={inboundOutboundFilters}
+              filters={inboundFilters}
               isInbound={true}
+              onBatchDelete={handleBatchDelete}
             />
           </div>
         )}

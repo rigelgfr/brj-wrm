@@ -22,14 +22,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-
 import { Button } from "./ui/button"
 import FileUploadDialog from './FileUploadDialog';
 import { AddUsersDialog } from "./AddDialog"
-import { Upload, UserPlus, Download } from "lucide-react"
+import { Upload, UserPlus, Download, Trash } from "lucide-react"
 import { DataTableFilter } from "./DataTableFilter"
 import { FilterConfig } from "./types"
 import { Input } from "./ui/input"
+import ConfirmDialog from "./ui/ConfirmDialog"
 
 interface BasicTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -160,6 +160,7 @@ interface DataTableProps<TData, TValue> {
     filters?: FilterConfig[] // Make filters optional
     showUpload?: boolean // Optional prop to control upload button visibility
     isInbound?: boolean
+    onBatchDelete?: (ids: string[]) => Promise<void> // Add this prop for batch delete
 }
   
 export function DataTable<TData, TValue>({
@@ -168,11 +169,14 @@ data,
 onRefresh,
 filters = [], // Default to empty array if not provided
 showUpload = true, // Default to true to maintain backward compatibility
-isInbound
+isInbound,
+onBatchDelete
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [rowSelection, setRowSelection] = useState({});
+  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
 
   const enhancedColumns = useMemo(
       () => columns.map(col => {
@@ -196,14 +200,39 @@ isInbound
       getSortedRowModel: getSortedRowModel(),
       onColumnFiltersChange: setColumnFilters,
       getFilteredRowModel: getFilteredRowModel(),
+      onRowSelectionChange: setRowSelection,
       state: {
       sorting,
       columnFilters,
+      rowSelection,
       },
       meta: {
       onRefresh
       }
   });
+
+  // Add this to handle batch delete
+  const handleBatchDelete = async () => {
+    try {
+      // Get selected row IDs
+      const selectedRows = table.getFilteredSelectedRowModel().rows;
+      // Use type assertion or optional chaining to safely access the id
+      const selectedIds = selectedRows.map(row => (row.original as any).no);
+      
+      // Call the onBatchDelete function if provided
+      if (onBatchDelete && selectedIds.length > 0) {
+        await onBatchDelete(selectedIds);
+        // Reset selection after deletion
+        setRowSelection({});
+        // Refresh the table
+        if (onRefresh) onRefresh();
+      }
+      
+      setShowBatchDeleteDialog(false);
+    } catch (error) {
+      console.error("Failed to delete records:", error);
+    }
+  };
 
   const resetFiltersAndSorting = () => {
       setSorting([]);
@@ -490,6 +519,15 @@ isInbound
           )}
           </div>
           <div className="flex space-x-2">
+            <Button
+              onClick={() => setShowBatchDeleteDialog(true)}
+              variant="destructive"
+              size="default"
+              className="px-2"
+              disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+            >
+              <Trash />
+            </Button>
             {showUpload && (
               <Button
                 onClick={() => setShowUploadDialog(true)}
@@ -512,6 +550,18 @@ isInbound
             </Button>
           </div>
       </div>
+
+      {/* Add Confirm Dialog for batch delete */}
+      <ConfirmDialog
+        open={showBatchDeleteDialog}
+        onOpenChange={setShowBatchDeleteDialog}
+        onContinue={handleBatchDelete}
+        title="Delete Selected Records"
+        description={`Are you sure you want to delete ${table.getFilteredSelectedRowModel().rows.length} selected records? This action is irreversible.`}
+        cancelText="No, Cancel"
+        continueText="Yes, Delete"
+        variant="destructive"
+      />
 
       {showUpload && (
           <FileUploadDialog 
@@ -668,6 +718,7 @@ interface UsersTableProps<TData, TValue> {
   onRefresh?: () => void
   filters?: FilterConfig[] // Make filters optional
   showAddUser?: boolean // Optional prop to control add user button visibility
+  onBatchDelete?: (ids: string[]) => Promise<void> // Add this prop for batch delete
 }
 
 export function UsersTable<TData, TValue>({
@@ -676,10 +727,13 @@ data,
 onRefresh,
 filters = [], // Default to empty array if not provided
 showAddUser = true, // Default to true to maintain backward compatibility
+onBatchDelete,
 }: UsersTableProps<TData, TValue>) {
 const [sorting, setSorting] = useState<SortingState>([])
 const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 const [showAddUserDialog, setShowAddUserDialog] = useState(false);
+const [rowSelection, setRowSelection] = useState({});
+  const [showBatchDeleteDialog, setShowBatchDeleteDialog] = useState(false);
 
 // Define a safe onRefresh function that will never be undefined
 const handleRefresh = useCallback(() => {
@@ -710,14 +764,38 @@ const table = useReactTable({
   getSortedRowModel: getSortedRowModel(),
   onColumnFiltersChange: setColumnFilters,
   getFilteredRowModel: getFilteredRowModel(),
+  onRowSelectionChange: setRowSelection,
   state: {
     sorting,
     columnFilters,
+    rowSelection,
   },
   meta: {
     onRefresh: handleRefresh
   }
 });
+
+const handleBatchDelete = async () => {
+  try {
+    // Get selected row IDs
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    // Use type assertion or optional chaining to safely access the id
+    const selectedIds = selectedRows.map(row => (row.original as any).id);
+    
+    // Call the onBatchDelete function if provided
+    if (onBatchDelete && selectedIds.length > 0) {
+      await onBatchDelete(selectedIds);
+      // Reset selection after deletion
+      setRowSelection({});
+      // Refresh the table
+      if (onRefresh) onRefresh();
+    }
+    
+    setShowBatchDeleteDialog(false);
+  } catch (error) {
+    console.error("Failed to delete records:", error);
+  }
+};
 
 const resetFiltersAndSorting = () => {
   setSorting([]);
@@ -738,18 +816,41 @@ return (
           />
         )}
       </div>
-      {showAddUser && (
+      <div className="flex space-x-2">
         <Button
-          onClick={() => setShowAddUserDialog(true)}
-          variant="default"
+          onClick={() => setShowBatchDeleteDialog(true)}
+          variant="destructive"
           size="default"
-          className="bg-green-krnd hover:bg-green-krnd-hover px-2 ml-4"
+          className="px-2"
+          disabled={table.getFilteredSelectedRowModel().rows.length === 0}
         >
-          <UserPlus />
-          Add User
+          <Trash />
         </Button>
-      )}
+
+        {showAddUser && (
+          <Button
+            onClick={() => setShowAddUserDialog(true)}
+            variant="default"
+            size="default"
+            className="bg-green-krnd hover:bg-green-krnd-hover px-2 ml-4"
+          >
+            <UserPlus />
+            Add User
+          </Button>
+        )}
+      </div>
     </div>
+
+    <ConfirmDialog
+      open={showBatchDeleteDialog}
+      onOpenChange={setShowBatchDeleteDialog}
+      onContinue={handleBatchDelete}
+      title="Delete Selected Records"
+      description={`Are you sure you want to delete ${table.getFilteredSelectedRowModel().rows.length} selected records? This action is irreversible.`}
+      cancelText="No, Cancel"
+      continueText="Yes, Delete"
+      variant="destructive"
+    />
 
     {showAddUser && (
       <AddUsersDialog 
@@ -757,7 +858,7 @@ return (
         onClose={() => setShowAddUserDialog(false)}
         onRefresh={handleRefresh}
       />
-    )}
+    )}    
 
     <div className="rounded-md border h-full">
       <Table>

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { EditDialog } from "@/components/EditDialog";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatLeadtime } from "../utils";
 
 // Define the shape of the outbound data
@@ -235,6 +235,28 @@ const ActionCell = ({ row, table }: ActionCellProps) => {
 }
 
 export const columns: ColumnDefWithMeta<Outbound>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: "no",
       header: ({ column }) => {
