@@ -507,7 +507,7 @@ onBatchDelete
   };
 
   return (
-      <div>
+    <div className="flex flex-col h-[calc(100vh-130px)]"> {/* Adjust 80px based on your header/nav height */}
       <div className="flex items-center justify-between mb-4">
           <div className="flex-1">
           {filters.length > 0 && (
@@ -550,7 +550,7 @@ onBatchDelete
             </Button>
           </div>
       </div>
-
+  
       {/* Add Confirm Dialog for batch delete */}
       <ConfirmDialog
         open={showBatchDeleteDialog}
@@ -562,7 +562,7 @@ onBatchDelete
         continueText="Yes, Delete"
         variant="destructive"
       />
-
+  
       {showUpload && (
           <FileUploadDialog 
           open={showUploadDialog}
@@ -575,12 +575,13 @@ onBatchDelete
           fileTypeName="CSV file"
           />
       )}
-
-      <div className="rounded-md border h-full">
+  
+      {/* Table container with flex-grow to fill available space */}
+      <div className="rounded-md border flex-grow overflow-auto">
           <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-lightgreen-header">
                   {headerGroup.headers.map((header) => {
                   const isActions = header.id === "actions";
                   return (
@@ -588,7 +589,7 @@ onBatchDelete
                           key={header.id}
                           className={`${
                           isActions 
-                              ? "sticky right-0 bg-white drop-shadow-lg" 
+                              ? "sticky right-0 bg-lightgreen-header drop-shadow-lg" 
                               : ""
                           }`}
                       >
@@ -637,13 +638,14 @@ onBatchDelete
               )}
           </TableBody>
           </Table>
-
       </div>
-      <div className="grid grid-cols-2">
-          <div className="flex items-center justify-start py-4">
+      
+      {/* Pagination with fixed height */}
+      <div className="grid grid-cols-2 py-4">
+          <div className="flex items-center justify-start">
               <p>Returned rows: {table.getFilteredRowModel().rows.length}</p>
           </div>
-          <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex items-center justify-end space-x-2">
           <Button
               variant="outline"
               size="sm"
@@ -708,7 +710,7 @@ onBatchDelete
           </div>
       </div>
           
-      </div>
+    </div>
   )
 }
 
