@@ -581,7 +581,7 @@ onBatchDelete
           <Table>
           <TableHeader className="sticky top-0 z-10">
               {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-lightgreen-header">
+              <TableRow key={headerGroup.id} className="bg-lightgreen-header hover:bg-lightgreen-header">
                   {headerGroup.headers.map((header) => {
                   const isActions = header.id === "actions";
                   return (
@@ -589,7 +589,7 @@ onBatchDelete
                           key={header.id}
                           className={`${
                           isActions 
-                              ? "sticky right-0 bg-lightgreen-header drop-shadow-lg" 
+                              ? "sticky right-0 bg-lightgreen-header" 
                               : ""
                           }`}
                       >

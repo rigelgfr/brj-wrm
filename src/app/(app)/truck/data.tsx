@@ -3,7 +3,6 @@ import {
   BarChart,
   Bar,
   XAxis,
-  YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
@@ -119,7 +118,6 @@ export const TruckCountChart = ({
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis domain={[0, maxValuePadded]} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="total" fill="#94d454">
                 <LabelList
