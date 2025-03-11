@@ -8,11 +8,12 @@ import {
   Row,
 } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useState, useEffect, useMemo, Fragment } from "react";
+import { useState, useEffect, useMemo, Fragment, useRef } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import Loading from "@/components/ui/Loading";
+import CopyTableAsImage from "@/components/CopyTable";
 
 export interface WarehouseData {
   wh_type: string;
@@ -39,6 +40,8 @@ export function TrendTable() {
   const [weekColumns, setWeekColumns] = useState<string[]>([]);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [prevMonths, setPrevMonths] = useState<string[]>([]);
+  const tableRef = useRef<HTMLDivElement>(null);
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -287,9 +290,17 @@ export function TrendTable() {
             <SelectItem value="outbound">Outbound</SelectItem>
           </SelectContent>
         </Select>
+
+        <CopyTableAsImage
+          tableRef={tableRef}
+          className="ml-auto"
+          filename={`warehouse-occupancy-${year}-${month}`}
+          onCopySuccess={() => console.log("Table copied successfully")}
+          onCopyError={(err) => console.error("Error copying table:", err)}
+        />
       </div>
 
-      <div className="w-full">
+      <div className="w-full" ref={tableRef}>
         <Table>
           <TableHeader>
             <TableRow className="bg-lightgreen-header hover:bg-lightgreen h-2 py-0">

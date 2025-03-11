@@ -7,12 +7,13 @@ import {
   CellContext
 } from "@tanstack/react-table";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useState, useEffect, useMemo, Fragment } from "react";
+import { useState, useEffect, useMemo, Fragment, useRef } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import Loading from "@/components/ui/Loading";
 import { PieChart } from "@/components/Charts";
+import CopyTableAsImage from "@/components/CopyTable";
 
 interface WeekData {
   occupied_sqm: number;
@@ -53,6 +54,7 @@ export function OccupancyTable() {
   const [error, setError] = useState<string | null>(null);
   const [weeks, setWeeks] = useState<number[]>([]);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const tableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -261,9 +263,17 @@ export function OccupancyTable() {
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      <div className="w-full overflow-x-auto">
+        <CopyTableAsImage
+          tableRef={tableRef}
+          className="ml-auto"
+          filename={`warehouse-occupancy-${year}-${month}`}
+          onCopySuccess={() => console.log("Table copied successfully")}
+          onCopyError={(err) => console.error("Error copying table:", err)}
+        />
+      </div>
+  
+      <div className="w-full overflow-x-auto" ref={tableRef}>
         <Table>
           <TableHeader>
             {/* First header row with base columns and week numbers */}
@@ -275,23 +285,23 @@ export function OccupancyTable() {
                 <TableHead 
                   key={`W${week}`} 
                   colSpan={3} 
-                  className="text-center bg-lightgreen-header border-b-2 border-x-2 border-darkgreen-header"
+                  className="text-center bg-lightgreen-header border-b-2 border-x-2 border-darkgreen-header w-60"
                 >
                   {week}
                 </TableHead>
               ))}
             </TableRow>
-
+  
             {/* Second header row with column names */}
             <TableRow>
               <TableHead className="bg-lightgreen-header">Area</TableHead>
               <TableHead className="bg-lightgreen-header">WH Type</TableHead>
               <TableHead className="bg-lightgreen-header">Section</TableHead>
-              <TableHead className="bg-lightgreen-header">Total Sqm</TableHead>
+              <TableHead className="bg-lightgreen-header text-right">Total Sqm</TableHead>
               {weeks.map(week => (
                 <Fragment key={`W${week}_subheaders`}>
                   <TableHead className="text-center border-l bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied<br/>(sqm)</TableHead>
-                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied<br/>(cbm) </TableHead>
+                  <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Occupied<br/>(cbm)</TableHead>
                   <TableHead className="text-center bg-lightgreen-header border-x-2 border-darkgreen-header">Empty<br/>(sqm)</TableHead>
                 </Fragment>
               ))}
@@ -328,18 +338,18 @@ export function OccupancyTable() {
                         <TableCell className="italic text-sm">
                           ({rows.length} sections)
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right pr-4">
                           {groupTotals.get(whType)!.total_sqm.toFixed(0)}
                         </TableCell>
                         {weeks.map(week => (
                           <Fragment key={week}>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right pr-4">
                               {(groupTotals.get(whType)![`W${week}`] || 0).toFixed(0)}
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right pr-4">
                               {rows.reduce((sum, row) => sum + (row[`W${week}`]?.occupied_vol || 0), 0).toFixed(0)}
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right pr-4">
                               {rows.reduce((sum, row) => sum + (row[`W${week}`]?.empty_sqm || 0), 0).toFixed(0)}
                             </TableCell>
                           </Fragment>
@@ -369,18 +379,18 @@ export function OccupancyTable() {
                             )}
                           </TableCell>
                           <TableCell>{row.section}</TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right pr-4">
                             {row.total_sqm.toFixed(0)}
                           </TableCell>
                           {weeks.map(week => (
                             <Fragment key={week}>
-                              <TableCell className="text-right border-x-2 border-darkgreen-header">
+                              <TableCell className="text-right pr-4 border-x-2 border-darkgreen-header">
                                 {(row[`W${week}`]?.occupied_sqm || 0).toFixed(0)}
                               </TableCell>
-                              <TableCell className="text-right border-x-2 border-darkgreen-header">
+                              <TableCell className="text-right pr-4 border-x-2 border-darkgreen-header">
                                 {(row[`W${week}`]?.occupied_vol || 0).toFixed(0)}
                               </TableCell>
-                              <TableCell className="text-right border-x-2 border-darkgreen-header">
+                              <TableCell className="text-right pr-4 border-x-2 border-darkgreen-header">
                                 {(row[`W${week}`]?.empty_sqm || 0).toFixed(0)}
                               </TableCell>
                             </Fragment>
