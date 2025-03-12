@@ -186,7 +186,7 @@ export default function FilterBar({
               Filters {getSelectedCount(filters) > 0 && `(${getSelectedCount(filters)})`}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-screen max-w-3xl p-4">
+          <DropdownMenuContent className="w-screen max-w-3xl p-4" align='start'>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {(Object.keys(filterOptions) as SlicerType[]).map((type) => (
                 <Slicer
