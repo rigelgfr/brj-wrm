@@ -3,7 +3,7 @@
 import React, { FC, useState, useEffect } from 'react';
 import { Button, ButtonProps } from "@/components/ui/button";
 import { Clipboard, Check } from "lucide-react";
-import html2canvas from "html2canvas";
+import domtoimage from 'dom-to-image';
 
 interface CopyTableAsImageProps extends Omit<ButtonProps, 'onClick'> {
   tableRef: React.RefObject<HTMLElement>;
@@ -76,23 +76,17 @@ const CopyTableAsImage: FC<CopyTableAsImageProps> = ({
       renderContainer.appendChild(tableContainer);
       document.body.appendChild(renderContainer);
       
-      // Render to canvas
-      const canvas = await html2canvas(tableContainer, {
-        scale: 2, // Increase resolution
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-      
-      // Remove the temporary element
-      document.body.removeChild(renderContainer);
-      
-      // Convert to Blob
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          const error = new Error('Failed to create blob from canvas');
-          onCopyError?.(error);
-          return;
-        }
+      // Use dom-to-image instead of html2canvas
+      try {
+        // Generate PNG data URL
+        const dataUrl = await domtoimage.toPng(tableContainer, {
+          bgcolor: '#ffffff',
+          scale: 2 // Increase resolution
+        });
+        
+        // Convert data URL to blob
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
         
         try {
           // Use Clipboard API to copy the image
@@ -118,7 +112,10 @@ const CopyTableAsImage: FC<CopyTableAsImageProps> = ({
           setSuccess(true); // Still consider it a success since we fell back to download
           onCopySuccess?.();
         }
-      }, 'image/png', 0.95);
+      } finally {
+        // Clean up - remove the temporary container
+        document.body.removeChild(renderContainer);
+      }
     } catch (error) {
       console.error('Error copying table as image:', error);
       onCopyError?.(error as Error);
