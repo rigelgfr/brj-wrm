@@ -141,7 +141,7 @@ const CopyTableAsImage: FC<CopyTableAsImageProps> = ({
     <Button
       onClick={copyTableAsImage}
       variant="outline"
-      size="default"
+      size="icon"
       className={`transition-all duration-200 ${className || ''}`}
       {...buttonProps}
       disabled={success}
