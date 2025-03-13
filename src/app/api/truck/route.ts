@@ -4,46 +4,92 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { standardizeTruckType } from "./classifyTruck";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // First, let's get total counts to verify our data
-    const totalInbound = await prisma.$queryRaw<any[]>`
-      SELECT COUNT(*) as count FROM inbound
-    `;
+    const { searchParams } = new URL(request.url);
     
-    const totalOutbound = await prisma.$queryRaw<any[]>`
-      SELECT COUNT(*) as count FROM outbound
-    `;
+    // Get filter parameters
+    const period = searchParams.get('period') || 'yearly';
+    const year = searchParams.get('year') || new Date().getFullYear().toString();
+    const month = searchParams.get('month');
+    const vehicleType = searchParams.get('vehicleType');
 
-    // Fetch inbound statistics with raw counts
-    const inboundStats = await prisma.$queryRaw<any[]>`
-      SELECT 
-        truck_type,
-        COUNT(*) as count,
-        AVG(leadtime_unload) as avg_unload,
-        MIN(leadtime_unload) as min_unload,
-        MAX(leadtime_unload) as max_unload,
-        AVG(leadtime_put) as avg_putaway,
-        MIN(leadtime_put) as min_putaway,
-        MAX(leadtime_put) as max_putaway
-      FROM inbound
-      GROUP BY truck_type
-    `;
+    // Build date filters
+    let dateFilter = {};
+    if (period === 'yearly') {
+      dateFilter = {
+        created_at: {
+          gte: new Date(`${year}-01-01`),
+          lt: new Date(`${parseInt(year) + 1}-01-01`),
+        },
+      };
+    } else if (period === 'monthly' && month) {
+      const monthNum = parseInt(month);
+      const nextMonth = monthNum === 12 ? 1 : monthNum + 1;
+      const nextYear = monthNum === 12 ? parseInt(year) + 1 : parseInt(year);
+      
+      dateFilter = {
+        created_at: {
+          gte: new Date(`${year}-${monthNum.toString().padStart(2, '0')}-01`),
+          lt: new Date(`${nextYear}-${nextMonth.toString().padStart(2, '0')}-01`),
+        },
+      };
+    }
 
-    // Fetch outbound statistics with raw counts
-    const outboundStats = await prisma.$queryRaw<any[]>`
-      SELECT 
-        truck_type,
-        COUNT(*) as count,
-        AVG(leadtime_picking) as avg_picking,
-        MIN(leadtime_picking) as min_picking,
-        MAX(leadtime_picking) as max_picking,
-        AVG(leadtime_load) as avg_load,
-        MIN(leadtime_load) as min_load,
-        MAX(leadtime_load) as max_load
-      FROM outbound
-      GROUP BY truck_type
-    `;
+    // Vehicle type filter (for by-vehicle mode)
+    let truckTypeFilter = {};
+    if (vehicleType) {
+      truckTypeFilter = {
+        truck_type: vehicleType,
+      };
+    }
+
+    // Get total counts for verification
+    const totalInbound = await prisma.inbound.count({
+      where: {
+        ...dateFilter,
+        ...truckTypeFilter,
+      },
+    });
+    
+    const totalOutbound = await prisma.outbound.count({
+      where: {
+        ...dateFilter,
+        ...truckTypeFilter,
+      },
+    });
+
+    // Fetch inbound statistics using Prisma's groupBy
+    const inboundStats = await prisma.inbound.groupBy({
+      by: ['truck_type'],
+      where: {
+        ...dateFilter,
+        ...truckTypeFilter,
+      },
+      _count: {
+        id: true,
+      },
+      _avg: {
+        leadtime_unload: true,
+        leadtime_put: true,
+      },
+    });
+
+    // Fetch outbound statistics using Prisma's groupBy
+    const outboundStats = await prisma.outbound.groupBy({
+      by: ['truck_type'],
+      where: {
+        ...dateFilter,
+        ...truckTypeFilter,
+      },
+      _count: {
+        id: true,
+      },
+      _avg: {
+        leadtime_picking: true,
+        leadtime_load: true,
+      },
+    });
 
     // Debug counters
     let totalInboundProcessed = 0;
@@ -53,83 +99,75 @@ export async function GET() {
       total_count: number;
       inbound: {
         count: number;
-        unload: { avg: number; min: number; max: number };
-        putaway: { avg: number; min: number; max: number };
+        unload: { avg: number };
+        putaway: { avg: number };
       };
       outbound: {
         count: number;
-        picking: { avg: number; min: number; max: number };
-        load: { avg: number; min: number; max: number };
+        picking: { avg: number };
+        load: { avg: number };
       };
     }> = {};
 
     // Process inbound stats
     inboundStats.forEach((stat) => {
-      const standardType = standardizeTruckType(stat.truck_type);
-      totalInboundProcessed += Number(stat.count);
+      const standardType = standardizeTruckType(stat.truck_type || '');
+      totalInboundProcessed += stat._count.id;
       
       if (!aggregatedStats[standardType]) {
         aggregatedStats[standardType] = {
           total_count: 0,
           inbound: {
             count: 0,
-            unload: { avg: 0, min: 0, max: 0 },
-            putaway: { avg: 0, min: 0, max: 0 }
+            unload: { avg: 0 },
+            putaway: { avg: 0 }
           },
           outbound: {
             count: 0,
-            picking: { avg: 0, min: 0, max: 0 },
-            load: { avg: 0, min: 0, max: 0 }
+            picking: { avg: 0 },
+            load: { avg: 0 }
           }
         };
       }
 
       // Add to existing count instead of overwriting
-      aggregatedStats[standardType].inbound.count += Number(stat.count);
+      aggregatedStats[standardType].inbound.count += stat._count.id;
       aggregatedStats[standardType].inbound.unload = {
-        avg: Number(stat.avg_unload) || 0,
-        min: Number(stat.min_unload) || 0,
-        max: Number(stat.max_unload) || 0
+        avg: stat._avg.leadtime_unload || 0
       };
       aggregatedStats[standardType].inbound.putaway = {
-        avg: Number(stat.avg_putaway) || 0,
-        min: Number(stat.min_putaway) || 0,
-        max: Number(stat.max_putaway) || 0
+        avg: stat._avg.leadtime_put || 0
       };
     });
 
     // Process outbound stats
     outboundStats.forEach((stat) => {
-      const standardType = standardizeTruckType(stat.truck_type);
-      totalOutboundProcessed += Number(stat.count);
+      const standardType = standardizeTruckType(stat.truck_type || '');
+      totalOutboundProcessed += stat._count.id;
       
       if (!aggregatedStats[standardType]) {
         aggregatedStats[standardType] = {
           total_count: 0,
           inbound: {
             count: 0,
-            unload: { avg: 0, min: 0, max: 0 },
-            putaway: { avg: 0, min: 0, max: 0 }
+            unload: { avg: 0 },
+            putaway: { avg: 0 }
           },
           outbound: {
             count: 0,
-            picking: { avg: 0, min: 0, max: 0 },
-            load: { avg: 0, min: 0, max: 0 }
+            picking: { avg: 0 },
+            load: { avg: 0 }
           }
         };
       }
 
-      // Add to existing count instead of overwriting
-      aggregatedStats[standardType].outbound.count += Number(stat.count);
+      // Add to existing count instead of overwriting  
+      aggregatedStats[standardType].outbound.count += stat._count.id;
       aggregatedStats[standardType].outbound.picking = {
-        avg: Number(stat.avg_picking) || 0,
-        min: Number(stat.min_picking) || 0,
-        max: Number(stat.max_picking) || 0
+        avg: stat._avg.leadtime_picking || 0
       };
       aggregatedStats[standardType].outbound.load = {
-        avg: Number(stat.avg_load) || 0,
-        min: Number(stat.min_load) || 0,
-        max: Number(stat.max_load) || 0
+        avg: stat._avg.leadtime_load || 0
       };
     });
 
@@ -144,8 +182,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       debug: {
-        rawTotalInbound: Number(totalInbound[0].count),
-        rawTotalOutbound: Number(totalOutbound[0].count),
+        rawTotalInbound: totalInbound,
+        rawTotalOutbound: totalOutbound,
         processedTotalInbound: totalInboundProcessed,
         processedTotalOutbound: totalOutboundProcessed,
       },
