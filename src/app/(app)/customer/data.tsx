@@ -317,7 +317,7 @@ export function TrendTable() {
               ))}
               {/* Week of Month spanning all week columns */}
               <TableHead colSpan={weekColumns.length} className="text-center h-4 py-0 ">
-                Week of Month
+                Week of {month}
               </TableHead>
               {/* Blank cell for grand total */}
               <TableHead />
@@ -328,7 +328,7 @@ export function TrendTable() {
                   <TableHead 
                     key={header.id} 
                     style={{ width: header.getSize() }}
-                    className={`h-2 py-0.5 ${header.id.includes('W') || header.id === 'grandTotal' ? 'text-right' : ''} bg-lightgreen-header text-darkgrey-krnd`}
+                    className={`h-2 py-0.5 ${header.id.includes('W') || header.id === 'grandTotal' ? 'text-right' : ''} bg-lightgreen-header`}
                   >
                     {flexRender(
                       header.column.columnDef.header,
