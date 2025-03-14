@@ -50,6 +50,7 @@ interface ApiResponse {
   timeframe: {
     year: number;
     month: string | null;
+    week: number | null;
   };
   truck_counts: TruckCount[];
   leadtime_averages: LeadtimeAverage[];
@@ -60,6 +61,7 @@ interface TruckByAreaResponse {
   timeframe: {
     year: number;
     month: string | null;
+    week: number | null;
   };
   truck_counts_by_area: {
     area: string;
@@ -132,12 +134,21 @@ const TRUCK_TYPES = [
   "Unknown"
 ];
 
+const weeks = [
+  { value: "W1", label: "W1" },
+  { value: "W2", label: "W2" },
+  { value: "W3", label: "W3" },
+  { value: "W4", label: "W4" },
+  { value: "W5", label: "W5" }
+];
+
 // Updated data fetching hook to work with our new API
 export const useTruckStats = (
   viewMode: string = "overall",
   periodMode: string = "yearly",
   selectedYear: string = new Date().getFullYear().toString(),
   selectedMonth: string | null = null,
+  selectedWeek: string | null = null,
   selectedVehicleType: string | null = null
 ) => {
   const [data, setData] = useState<{ success: boolean, data: Record<string, TransformedTruckStats> } | null>(null);
@@ -158,8 +169,13 @@ export const useTruckStats = (
         params.append("year", selectedYear);
         
         // Add month parameter if periodMode is monthly
-        if (periodMode === "monthly" && selectedMonth) {
+        if ((periodMode === "monthly" || periodMode === "weekly") && selectedMonth) {
           params.append("month", new Date(2000, parseInt(selectedMonth) - 1, 1).toLocaleString('default', { month: 'long' }));
+        }
+        
+        // Add week parameter if periodMode is weekly
+        if (periodMode === "weekly" && selectedWeek) {
+          params.append("week", selectedWeek);
         }
         
         // Add vehicle_type parameter if in by-vehicle mode and a specific type is selected
@@ -270,7 +286,7 @@ export const useTruckStats = (
     };
 
     fetchData();
-  }, [viewMode, periodMode, selectedYear, selectedMonth, selectedVehicleType]);
+  }, [viewMode, periodMode, selectedYear, selectedMonth, selectedWeek, selectedVehicleType]);
 
   return { data, loading, error, availableVehicleTypes };
 };
@@ -386,20 +402,22 @@ const LeadtimeTable = ({
   );
 };
 
-// Main TruckDashboard component - fixed to resolve the issues
+// Main TruckDashboard component - updated to include weekly selection
 export const TruckDashboard = () => {
   const [viewMode, setViewMode] = useState<string>("overall");
   const [periodMode, setPeriodMode] = useState<string>("yearly");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedMonth, setSelectedMonth] = useState<string>((new Date().getMonth() + 1).toString());
+  const [selectedWeek, setSelectedWeek] = useState<string>("W1");
   const [selectedVehicleType, setSelectedVehicleType] = useState<string | null>(null);
   
-  // Use the updated hook with all filter parameters
+  // Use the updated hook with all filter parameters including week
   const { data, loading, error, availableVehicleTypes } = useTruckStats(
     viewMode,
     periodMode,
     selectedYear,
     periodMode === "monthly" ? selectedMonth : null,
+    periodMode === "weekly" ? selectedWeek : null,
     selectedVehicleType
   );
   
@@ -415,7 +433,7 @@ export const TruckDashboard = () => {
   
   return (
     <div className="space-y-4">
-      <div className="flex justify-start gap-2">
+      <div className="flex justify-start gap-2 flex-wrap">
         <Select
           value={viewMode}
           onValueChange={(value) => {
@@ -433,17 +451,27 @@ export const TruckDashboard = () => {
           </SelectContent>
         </Select>
         
-        <Select value={periodMode} onValueChange={setPeriodMode}>
+        <Select 
+          value={periodMode} 
+          onValueChange={(value) => {
+            setPeriodMode(value);
+            // Reset to default values when changing period mode
+            if (value === "weekly") {
+              setSelectedWeek("W1");
+            }
+          }}
+        >
           <SelectTrigger className="w-[100px]">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="yearly">Yearly</SelectItem>
             <SelectItem value="monthly">Monthly</SelectItem>
+            <SelectItem value="weekly">Weekly</SelectItem>
           </SelectContent>
         </Select>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {/* Year selector - shown for all combinations */}
           <Select value={selectedYear} onValueChange={setSelectedYear}>
             <SelectTrigger className="w-[80px]">
@@ -459,7 +487,7 @@ export const TruckDashboard = () => {
           </Select>
           
           {/* Month selector - shown when periodMode is 'monthly' */}
-          {periodMode === "monthly" && (
+          {(periodMode === "monthly" || periodMode === "weekly") &&  (
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Month" />
@@ -474,6 +502,21 @@ export const TruckDashboard = () => {
             </Select>
           )}
           
+          {periodMode === "weekly" && (
+            <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+              <SelectTrigger className="w-[80px]">
+                <SelectValue placeholder="Week" />
+              </SelectTrigger>
+              <SelectContent>
+                {weeks.map(week => (
+                  <SelectItem key={week.value} value={week.value}>
+                    {week.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           {/* Vehicle Type selector - shown when viewMode is 'by-vehicle' */}
           {viewMode === "by-vehicle" && (
             <Select 

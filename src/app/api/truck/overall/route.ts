@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const year = url.searchParams.get('year');
     const month = url.searchParams.get('month');
+    const week = url.searchParams.get('week');
 
     // Validate year
     if (!year) {
@@ -30,7 +31,11 @@ export async function GET(request: NextRequest) {
     // Prepare filter conditions
     const yearFilter = { year: yearNum };
     const monthFilter = month ? { month } : {};
-    const filter = { ...yearFilter, ...monthFilter };
+    
+    // Add week filter if provided - use the week value directly as a string
+    const weekFilter = week ? { week_in_month: week } : {};
+    
+    const filter = { ...yearFilter, ...monthFilter, ...weekFilter };
 
     // Get truck counts by type for inbound and outbound
     const [inboundData, outboundData] = await Promise.all([
@@ -168,7 +173,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       timeframe: {
         year: yearNum,
-        month: month || null
+        month: month || null,
+        week: week || null
       },
       truck_counts: truckTypeCounts,
       leadtime_averages: leadtimes
