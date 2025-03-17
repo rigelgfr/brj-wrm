@@ -218,7 +218,7 @@ export const useTruckStats = (
               },
             };
           });
-          
+
           console.log("Transformed Data (Overall):", transformedData);
           setData({ success: true, data: transformedData });
         } else {
@@ -416,7 +416,7 @@ export const TruckDashboard = () => {
     viewMode,
     periodMode,
     selectedYear,
-    periodMode === "monthly" ? selectedMonth : null,
+    periodMode === "monthly" || periodMode === "weekly" ? selectedMonth : null,
     periodMode === "weekly" ? selectedWeek : null,
     selectedVehicleType
   );
