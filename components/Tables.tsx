@@ -89,66 +89,67 @@ export function BasicTable<TData, TValue>({
     },
     meta: { onRefresh },
   });
-
   return (
-    <div className="rounded-md border h-full">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                )
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-                className={`${
-                  Math.floor(row.index / stripe) % 2 === 0 
-                    ? "bg-lightgreen-header"
-                    : "bg-white"
-                }`}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const isActions = cell.column.id === "actions";
+    <div className="flex flex-col h-[calc(100vh-230px)]"> {/* Container with fixed height */}
+      <div className="rounded-md border flex-grow overflow-auto">
+        <Table>
+          <TableHeader className="sticky top-0 z-10">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="bg-white hover:bg-white">
+                {headerGroup.headers.map((header) => {
                   return (
-                    <TableCell 
-                      key={cell.id}
-                      className={`${
-                        isActions 
-                          ? "sticky right-0 bg-inherit text-center" 
-                          : ""
-                      }`}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   )
                 })}
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                  className={`${
+                    Math.floor(row.index / stripe) % 2 === 0 
+                      ? "bg-lightgreen-header"
+                      : "bg-white"
+                  }`}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const isActions = cell.column.id === "actions";
+                    return (
+                      <TableCell 
+                        key={cell.id}
+                        className={`${
+                          isActions 
+                            ? "sticky right-0 bg-inherit text-center" 
+                            : ""
+                        }`}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    )
+                  })}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }
@@ -505,7 +506,7 @@ onBatchDelete
     link.click();
     document.body.removeChild(link);
   };
-
+  //datatable
   return (
     <div className="flex flex-col h-[calc(100vh-130px)]"> {/* Adjust 80px based on your header/nav height */}
       <div className="flex items-center justify-between mb-4">
