@@ -162,7 +162,7 @@ export const useTruckStats = (
         setLoading(true);
         
         // Build the API URL based on parameters
-        let apiUrl = viewMode === "overall" ? "/api/truck/overall" : "/api/truck/by";
+        const apiUrl = viewMode === "overall" ? "/api/truck/overall" : "/api/truck/by";
         const params = new URLSearchParams();
         
         // Add the year parameter
