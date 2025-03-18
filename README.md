@@ -14,7 +14,9 @@ BRJ-WRM is an internal web application developed to display company's inbound an
 ## Sample Screenshots
 
 ![Login Page](/public/ss/1.png)
+
 ![Inbound Table](/public/ss/2.png)
+
 ![Operations Chart](/public/ss/3.png)
 
 ## Tech Stack
